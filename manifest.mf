@@ -1,0 +1,5 @@
+Manifest-Version: 1.0
+Main-Class: com.mycompany.mavenproject2.Launcher
+Class-Path: lib/sqlite-jdbc-3.44.1.0.jar lib/slf4j-api-2.0.9.jar lib/slf4j-simple-2.0.9.jar lib/javafx-controls-21.jar lib/javafx-fxml-21.jar
+
+

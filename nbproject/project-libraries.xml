@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE libraries PUBLIC "-//NetBeans//DTD Library Declaration 1.0//EN" "http://www.netbeans.org/dtds/library-declaration-1_0.dtd">
+<libraries>
+    <library>
+        <name>SQLite</name>
+        <type>j2se</type>
+        <volume>
+            <type>classpath</type>
+            <resource>jar:${base}/lib/sqlite-jdbc-3.44.1.0.jar!/</resource>
+        </volume>
+    </library>
+    <library>
+        <name>SLF4J</name>
+        <type>j2se</type>
+        <volume>
+            <type>classpath</type>
+            <resource>jar:${base}/lib/slf4j-api-2.0.9.jar!/</resource>
+            <resource>jar:${base}/lib/slf4j-simple-2.0.9.jar!/</resource>
+        </volume>
+    </library>
+    <library>
+        <name>JavaFX</name>
+        <type>j2se</type>
+        <volume>
+            <type>classpath</type>
+            <resource>jar:${base}/lib/javafx-controls-21.jar!/</resource>
+            <resource>jar:${base}/lib/javafx-fxml-21.jar!/</resource>
+        </volume>
+    </library>
+    <library>
+        <name>PDFBox</name>
+        <type>j2se</type>
+        <volume>
+            <type>classpath</type>
+            <resource>jar:${base}/lib/pdfbox-2.0.29.jar!/</resource>
+            <resource>jar:${base}/lib/fontbox-2.0.29.jar!/</resource>
+            <resource>jar:${base}/lib/commons-io-2.11.0.jar!/</resource>
+            <resource>jar:${base}/lib/commons-logging-1.2.jar!/</resource>
+            <resource>jar:${base}/lib/commons-compress-1.21.jar!/</resource>
+            <resource>jar:${base}/lib/log4j-api-2.18.0.jar!/</resource>
+        </volume>
+    </library>
+</libraries>

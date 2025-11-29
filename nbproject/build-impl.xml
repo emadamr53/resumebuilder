@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+*** GENERATED FROM project.xml - DO NOT EDIT  ***
+***         EDIT ../build.xml INSTEAD         ***
+
+For the purpose of easier reading the script
+is divided into following sections:
+  - initialization
+  - compilation
+  - jar
+  - execution
+  - debugging
+  - javadoc
+  - test compilation
+  - test execution
+  - test debugging
+  - cleanup
+-->
+<project xmlns:j2seproject1="http://www.netbeans.org/ns/j2se-project/1" xmlns:j2seproject3="http://www.netbeans.org/ns/j2se-project/3" xmlns:jaxrpc="http://www.netbeans.org/ns/j2se-project/jax-rpc" basedir=".." default="default" name="AmrEmad_ResumeBuilder-impl">
+    
+    <!-- ======================
+         INITIALIZATION SECTION
+         ====================== -->
+    
+    <target name="-pre-init">
+        <!-- Empty placeholder for easier customization. -->
+    </target>
+    
+    <target name="-init-private" depends="-pre-init">
+        <property file="nbproject/private/config.properties"/>
+        <property file="nbproject/private/configs/${config}.properties"/>
+        <property file="nbproject/private/private.properties"/>
+    </target>
+    
+    <target name="-init-user" depends="-pre-init,-init-private">
+        <property file="${user.properties.file}"/>
+    </target>
+    
+    <target name="-init-project" depends="-pre-init,-init-private,-init-user">
+        <property file="nbproject/configs/${config}.properties"/>
+        <property file="nbproject/project.properties"/>
+    </target>
+    
+    <target name="-init-macrodef-property">
+        <macrodef name="property" uri="http://www.netbeans.org/ns/j2se-project/1">
+            <attribute name="name"/>
+            <attribute name="value"/>
+            <sequential>
+                <property name="@{name}" value="${@{value}}"/>
+            </sequential>
+        </macrodef>
+    </target>
+    
+    <target name="-do-init" depends="-pre-init,-init-private,-init-user,-init-project,-init-macrodef-property">
+        <property name="platform.java" value="${java.home}/bin/java"/>
+        <available file="${manifest.file}" property="manifest.available"/>
+        <condition property="splashscreen.available">
+            <and>
+                <not><equals arg1="${application.splash}" arg2="" trim="true"/></not>
+                <available file="${application.splash}"/>
+            </and>
+        </condition>
+        <condition property="main.class.available">
+            <and>
+                <isset property="main.class"/>
+                <not><equals arg1="${main.class}" arg2="" trim="true"/></not>
+            </and>
+        </condition>
+        <condition property="profile.available">
+            <and>
+                <isset property="javac.profile"/>
+                <length string="${javac.profile}" when="greater" length="0"/>
+            </and>
+        </condition>
+        <condition property="do.archive">
+            <or>
+                <not><istrue value="${jar.archive.disabled}"/></not>
+                <istrue value="${not.archive.disabled}"/>
+            </or>
+        </condition>
+        <condition property="do.mkdist">
+            <and>
+                <isset property="do.archive"/>
+                <isset property="libs.CopyLibs.classpath"/>
+                <not><istrue value="${mkdist.disabled}"/></not>
+            </and>
+        </condition>
+        <mkdir dir="${build.classes.dir}"/>
+    </target>
+    
+    <target name="-post-init">
+        <!-- Empty placeholder for easier customization. -->
+    </target>
+    
+    <target depends="-pre-init,-init-private,-init-user,-init-project,-do-init,-post-init" name="init"/>
+    
+    <!-- =====================
+         COMPILATION SECTION
+         ===================== -->
+    
+    <target name="-pre-compile">
+        <!-- Empty placeholder for easier customization. -->
+    </target>
+    
+    <target depends="init" name="-compile-depend" if="do.depend">
+        <depend srcdir="${src.dir}" destdir="${build.classes.dir}" cache="build/depcache">
+            <classpath>
+                <path path="${javac.classpath}"/>
+            </classpath>
+        </depend>
+    </target>
+    
+    <target depends="init,-pre-compile,-compile-depend" name="-do-compile">
+        <mkdir dir="${build.classes.dir}"/>
+        <javac srcdir="${src.dir}" 
+               destdir="${build.classes.dir}" 
+               debug="true" 
+               deprecation="${javac.deprecation}" 
+               encoding="${source.encoding}" 
+               source="${javac.source}" 
+               target="${javac.target}" 
+               includeantruntime="false"
+               fork="true"
+               modulepath="${javac.modulepath}">
+            <classpath>
+                <path path="${javac.classpath}"/>
+            </classpath>
+            <compilerarg value="--add-modules"/>
+            <compilerarg value="javafx.controls,javafx.fxml,javafx.graphics,javafx.base"/>
+        </javac>
+        <copy todir="${build.classes.dir}">
+            <fileset dir="${src.dir}" excludes="${build.classes.excludes},${excludes}" includes="${includes}"/>
+        </copy>
+    </target>
+    
+    <target name="-post-compile">
+        <!-- Empty placeholder for easier customization. -->
+    </target>
+    
+    <target depends="init,-pre-compile,-do-compile,-post-compile" description="Compile project." name="compile"/>
+    
+    <!-- =================
+         JAR SECTION
+         ================= -->
+    
+    <target name="-pre-jar">
+        <!-- Empty placeholder for easier customization. -->
+    </target>
+    
+    <target depends="init" name="-check-automatic-build">
+        <condition property="no.auto.build">
+            <not><isset property="do.archive"/></not>
+        </condition>
+    </target>
+    
+    <target depends="init,compile,-pre-jar" name="-do-jar-without-manifest" unless="manifest.available">
+        <mkdir dir="${dist.dir}"/>
+        <jar destfile="${dist.jar}" compress="${jar.compress}">
+            <fileset dir="${build.classes.dir}"/>
+        </jar>
+    </target>
+    
+    <target depends="init,compile,-pre-jar" name="-do-jar-with-manifest" if="manifest.available">
+        <mkdir dir="${dist.dir}"/>
+        <jar destfile="${dist.jar}" compress="${jar.compress}" manifest="${manifest.file}">
+            <fileset dir="${build.classes.dir}"/>
+        </jar>
+    </target>
+    
+    <target depends="init,compile,-pre-jar,-do-jar-without-manifest,-do-jar-with-manifest" name="-do-jar"/>
+    
+    <target name="-post-jar">
+        <!-- Empty placeholder for easier customization. -->
+    </target>
+    
+    <target depends="init,compile,-pre-jar,-do-jar,-post-jar" description="Build JAR." name="jar"/>
+    
+    <!-- ====================
+         EXECUTION SECTION
+         ==================== -->
+    
+    <target depends="init,compile" description="Run the project." name="run">
+        <fail unless="main.class">No main class specified</fail>
+        <java classname="${main.class}" dir="${basedir}" fork="true" failonerror="true">
+            <classpath>
+                <path path="${run.classpath}"/>
+            </classpath>
+            <jvmarg line="${run.jvmargs}"/>
+        </java>
+    </target>
+    
+    <target depends="init" name="-do-not-recompile">
+        <property name="javac.includes.binary" value=""/>
+    </target>
+    
+    <target depends="init,compile" description="Run a single class." name="run-single">
+        <fail unless="run.class">Must specify run.class</fail>
+        <java classname="${run.class}" dir="${basedir}" fork="true" failonerror="true">
+            <classpath>
+                <path path="${run.classpath}"/>
+            </classpath>
+            <jvmarg line="${run.jvmargs}"/>
+        </java>
+    </target>
+    
+    <!-- ===================
+         DEBUGGING SECTION
+         =================== -->
+    
+    <target depends="init,compile" description="Debug the project." name="debug">
+        <fail unless="main.class">No main class specified</fail>
+        <nbjpdastart addressproperty="jpda.address" name="AmrEmad_ResumeBuilder" transport="dt_socket">
+            <classpath>
+                <path path="${debug.classpath}"/>
+            </classpath>
+        </nbjpdastart>
+        <java classname="${main.class}" dir="${basedir}" fork="true">
+            <classpath>
+                <path path="${debug.classpath}"/>
+            </classpath>
+            <jvmarg value="-agentlib:jdwp=transport=dt_socket,address=${jpda.address}"/>
+            <jvmarg line="${run.jvmargs}"/>
+        </java>
+    </target>
+    
+    <!-- ==================
+         JAVADOC SECTION
+         ================== -->
+    
+    <target depends="init" description="Build Javadoc." name="javadoc">
+        <mkdir dir="${dist.javadoc.dir}"/>
+        <javadoc destdir="${dist.javadoc.dir}" 
+                 encoding="${javadoc.encoding}" 
+                 charset="UTF-8" 
+                 source="${javac.source}"
+                 author="${javadoc.author}"
+                 version="${javadoc.version}"
+                 use="${javadoc.use}"
+                 windowtitle="${javadoc.windowtitle}">
+            <classpath>
+                <path path="${javac.classpath}"/>
+            </classpath>
+            <fileset dir="${src.dir}" includes="**/*.java"/>
+            <arg line="${javadoc.additionalparam}"/>
+        </javadoc>
+    </target>
+    
+    <!-- =======================
+         TEST COMPILATION SECTION
+         ======================= -->
+    
+    <target depends="init,compile" name="-pre-compile-test">
+        <!-- Empty placeholder for easier customization. -->
+    </target>
+    
+    <target depends="init,compile,-pre-compile-test" name="-do-compile-test">
+        <mkdir dir="${build.test.classes.dir}"/>
+        <javac srcdir="${test.src.dir}" 
+               destdir="${build.test.classes.dir}" 
+               debug="true" 
+               deprecation="${javac.deprecation}" 
+               encoding="${source.encoding}" 
+               source="${javac.source}" 
+               target="${javac.target}" 
+               includeantruntime="false"
+               fork="true">
+            <classpath>
+                <path path="${javac.test.classpath}"/>
+            </classpath>
+            <compilerarg line="${javac.compilerargs}"/>
+        </javac>
+        <copy todir="${build.test.classes.dir}">
+            <fileset dir="${test.src.dir}" excludes="${build.classes.excludes},${excludes}" includes="${includes}"/>
+        </copy>
+    </target>
+    
+    <target name="-post-compile-test">
+        <!-- Empty placeholder for easier customization. -->
+    </target>
+    
+    <target depends="init,compile,-pre-compile-test,-do-compile-test,-post-compile-test" name="compile-test"/>
+    
+    <!-- ====================
+         TEST EXECUTION SECTION
+         ==================== -->
+    
+    <target depends="init,compile-test" name="-pre-test-run">
+        <!-- Empty placeholder for easier customization. -->
+    </target>
+    
+    <target depends="init,compile-test,-pre-test-run" name="-do-test-run">
+        <mkdir dir="${build.test.results.dir}"/>
+        <junit fork="yes" printsummary="yes" haltonfailure="no" showoutput="true">
+            <classpath>
+                <path path="${run.test.classpath}"/>
+            </classpath>
+            <jvmarg line="${run.jvmargs}"/>
+            <batchtest todir="${build.test.results.dir}">
+                <fileset dir="${test.src.dir}" includes="**/*Test.java"/>
+            </batchtest>
+            <formatter type="brief" usefile="false"/>
+            <formatter type="xml"/>
+        </junit>
+    </target>
+    
+    <target name="-post-test-run">
+        <!-- Empty placeholder for easier customization. -->
+    </target>
+    
+    <target depends="init,compile-test,-pre-test-run,-do-test-run,-post-test-run" description="Run unit tests." name="test"/>
+    
+    <!-- ================
+         CLEANUP SECTION
+         ================ -->
+    
+    <target depends="init" description="Clean build products." name="clean">
+        <delete dir="${build.dir}"/>
+        <delete dir="${dist.dir}"/>
+    </target>
+    
+    <target depends="clean,jar" description="Clean and build JAR." name="rebuild"/>
+    
+    <!-- ================
+         DEFAULT TARGETS
+         ================ -->
+    
+    <target depends="jar" description="Build the project." name="default"/>
+    
+</project>

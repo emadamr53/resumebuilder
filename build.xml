@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- AmrEmad Resume Builder - Main Build File -->
+<project name="AmrEmad_ResumeBuilder" default="default" basedir=".">
+    <description>Builds, tests, and runs the AmrEmad Resume Builder project.</description>
+    <import file="nbproject/build-impl.xml"/>
+    
+    <!-- 
+        You may freely add new targets and override existing targets.
+        Also you can override the default target with:
+        <target name="default" depends="my-target" description="My description"/>
+    -->
+    
+    <!-- Override jar target to include dependencies -->
+    <target name="-post-jar">
+        <echo message="Build complete: ${dist.jar}"/>
+    </target>
+    
+</project>
+

@@ -1,106 +1,132 @@
 package utils;
 
 import javafx.scene.image.Image;
-import javafx.scene.image.ImageView;
+import javafx.scene.image.PixelWriter;
 import javafx.scene.image.WritableImage;
 import javafx.scene.paint.Color;
-import javafx.scene.canvas.Canvas;
-import javafx.scene.canvas.GraphicsContext;
+
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.EncodeHintType;
+import com.google.zxing.WriterException;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.qrcode.QRCodeWriter;
+import com.google.zxing.qrcode.decoder.ErrorCorrectionLevel;
 
 import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Simple QR Code Generator
- * Creates QR codes for app download links
+ * QR Code Generator using ZXing library
+ * Creates scannable QR codes for app download links
  */
 public class QRCodeGenerator {
     
     /**
-     * Generate QR code image from text
-     * This is a simplified QR code generator
-     * For production, consider using a library like ZXing
+     * Generate QR code image from text using ZXing library
+     * @param text The text/URL to encode in the QR code
+     * @param size The size of the QR code image (width and height in pixels)
+     * @return A JavaFX Image containing the QR code
      */
     public static Image generateQRCode(String text, int size) {
-        // For now, create a simple visual representation
-        // In production, use a proper QR code library
-        
-        Canvas canvas = new Canvas(size, size);
-        GraphicsContext gc = canvas.getGraphicsContext2D();
-        
-        // White background
-        gc.setFill(Color.WHITE);
-        gc.fillRect(0, 0, size, size);
-        
-        // Black border
-        gc.setFill(Color.BLACK);
-        gc.fillRect(0, 0, size, 10);
-        gc.fillRect(0, 0, 10, size);
-        gc.fillRect(size - 10, 0, 10, size);
-        gc.fillRect(0, size - 10, size, 10);
-        
-        // Create pattern (simplified QR code pattern)
-        int moduleSize = size / 25;
-        boolean[][] pattern = generateQRPattern(text, 25);
-        
-        for (int y = 0; y < 25; y++) {
-            for (int x = 0; x < 25; x++) {
-                if (pattern[y][x]) {
-                    gc.fillRect(x * moduleSize, y * moduleSize, moduleSize, moduleSize);
+        try {
+            // Validate input
+            if (text == null || text.trim().isEmpty()) {
+                System.err.println("QR Code Error: Text is null or empty");
+                return createErrorImage(size);
+            }
+            
+            if (size <= 0 || size > 2000) {
+                System.err.println("QR Code Error: Invalid size: " + size);
+                size = 300; // Default to 300 if invalid
+            }
+            
+            // Set encoding hints
+            Map<EncodeHintType, Object> hints = new HashMap<>();
+            hints.put(EncodeHintType.ERROR_CORRECTION, ErrorCorrectionLevel.H);
+            hints.put(EncodeHintType.CHARACTER_SET, "UTF-8");
+            hints.put(EncodeHintType.MARGIN, 1);
+            
+            // Create QR code writer
+            QRCodeWriter qrCodeWriter = new QRCodeWriter();
+            
+            // Encode the text into a BitMatrix
+            BitMatrix bitMatrix = qrCodeWriter.encode(text, BarcodeFormat.QR_CODE, size, size, hints);
+            
+            // Create JavaFX WritableImage
+            WritableImage image = new WritableImage(size, size);
+            PixelWriter pixelWriter = image.getPixelWriter();
+            
+            // Convert BitMatrix to JavaFX Image
+            for (int y = 0; y < size; y++) {
+                for (int x = 0; x < size; x++) {
+                    if (bitMatrix.get(x, y)) {
+                        // Black pixel for QR code module
+                        pixelWriter.setColor(x, y, Color.BLACK);
+                    } else {
+                        // White pixel for background
+                        pixelWriter.setColor(x, y, Color.WHITE);
+                    }
                 }
             }
+            
+            System.out.println("QR Code generated successfully for: " + text);
+            return image;
+            
+        } catch (WriterException e) {
+            System.err.println("QR Code WriterException: " + e.getMessage());
+            e.printStackTrace();
+            
+            // Fallback: return a simple error image
+            return createErrorImage(size);
+        } catch (NoClassDefFoundError e) {
+            System.err.println("QR Code Library Error: ZXing library not found in classpath!");
+            System.err.println("Error: " + e.getMessage());
+            e.printStackTrace();
+            return createErrorImage(size);
+        } catch (Exception e) {
+            System.err.println("Unexpected error generating QR code: " + e.getMessage());
+            e.printStackTrace();
+            return createErrorImage(size);
         }
-        
-        // Position markers (corners)
-        drawPositionMarker(gc, 2, 2, moduleSize);
-        drawPositionMarker(gc, 25 - 5, 2, moduleSize);
-        drawPositionMarker(gc, 2, 25 - 5, moduleSize);
-        
-        WritableImage image = new WritableImage(size, size);
-        canvas.snapshot(null, image);
-        return image;
     }
     
     /**
-     * Generate QR pattern (simplified)
+     * Create a simple error image if QR code generation fails
      */
-    private static boolean[][] generateQRPattern(String text, int size) {
-        boolean[][] pattern = new boolean[size][size];
+    private static Image createErrorImage(int size) {
+        WritableImage image = new WritableImage(size, size);
+        PixelWriter pixelWriter = image.getPixelWriter();
         
-        // Simple pattern based on text hash
-        int hash = text.hashCode();
-        
+        // Fill with white background
         for (int y = 0; y < size; y++) {
             for (int x = 0; x < size; x++) {
-                // Skip position markers area
-                if ((x < 7 && y < 7) || 
-                    (x >= size - 7 && y < 7) || 
-                    (x < 7 && y >= size - 7)) {
-                    continue;
-                }
-                
-                // Generate pattern
-                int value = (hash + x * 31 + y * 17) % 3;
-                pattern[y][x] = (value == 0);
+                pixelWriter.setColor(x, y, Color.WHITE);
             }
         }
         
-        return pattern;
-    }
-    
-    /**
-     * Draw position marker (corner squares)
-     */
-    private static void drawPositionMarker(GraphicsContext gc, int x, int y, int moduleSize) {
-        gc.setFill(Color.BLACK);
-        // Outer square
-        gc.fillRect(x * moduleSize, y * moduleSize, 7 * moduleSize, 7 * moduleSize);
-        // Inner white square
-        gc.setFill(Color.WHITE);
-        gc.fillRect((x + 1) * moduleSize, (y + 1) * moduleSize, 5 * moduleSize, 5 * moduleSize);
-        // Center black square
-        gc.setFill(Color.BLACK);
-        gc.fillRect((x + 2) * moduleSize, (y + 2) * moduleSize, 3 * moduleSize, 3 * moduleSize);
+        // Draw a red X to indicate error
+        Color errorColor = Color.RED;
+        int thickness = size / 20;
+        for (int i = 0; i < size; i++) {
+            // Diagonal from top-left to bottom-right
+            for (int j = -thickness; j <= thickness; j++) {
+                int x = i + j;
+                int y = i + j;
+                if (x >= 0 && x < size && y >= 0 && y < size) {
+                    pixelWriter.setColor(x, y, errorColor);
+                }
+            }
+            // Diagonal from top-right to bottom-left
+            for (int j = -thickness; j <= thickness; j++) {
+                int x = size - 1 - i + j;
+                int y = i + j;
+                if (x >= 0 && x < size && y >= 0 && y < size) {
+                    pixelWriter.setColor(x, y, errorColor);
+                }
+            }
+        }
+        
+        return image;
     }
     
     /**

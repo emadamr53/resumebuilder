@@ -109,11 +109,26 @@ public class QRCodeViewFX {
         
         // Generate QR code
         String downloadUrl = QRCodeGenerator.generateDownloadURL();
+        System.out.println("Generating QR code for URL: " + downloadUrl);
+        
         Image qrImage = QRCodeGenerator.generateQRCode(downloadUrl, 300);
+        
+        if (qrImage == null) {
+            System.err.println("Failed to generate QR code image");
+            showAlert("Error: Could not generate QR code. Please check console for details.");
+        }
+        
         qrCodeView = new ImageView(qrImage);
         qrCodeView.setFitWidth(300);
         qrCodeView.setFitHeight(300);
         qrCodeView.setPreserveRatio(true);
+        
+        // Add error indicator if QR code generation failed (red X image)
+        if (qrImage != null && qrImage.getWidth() > 0) {
+            // Check if it's an error image by checking if it's mostly white/red
+            // This is a simple check - in production you might want a better way
+            System.out.println("QR Code image created: " + qrImage.getWidth() + "x" + qrImage.getHeight());
+        }
         
         // Instructions
         Text instruction1 = new Text("1. Open your phone's camera");

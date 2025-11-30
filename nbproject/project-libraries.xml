@@ -40,4 +40,13 @@
             <resource>jar:${base}/lib/log4j-api-2.18.0.jar!/</resource>
         </volume>
     </library>
+    <library>
+        <name>ZXing</name>
+        <type>j2se</type>
+        <volume>
+            <type>classpath</type>
+            <resource>jar:${base}/lib/core-3.5.2.jar!/</resource>
+            <resource>jar:${base}/lib/javase-3.5.2.jar!/</resource>
+        </volume>
+    </library>
 </libraries>

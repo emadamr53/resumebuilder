@@ -785,7 +785,18 @@ function generateQRCode() {
     }
     
     // Get the GitHub Pages URL
-    const githubPagesUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '') || 'https://amremad.github.io/resumebuilder/';
+    // Use current origin (works for GitHub Pages) or fallback to correct GitHub Pages URL
+    let githubPagesUrl = window.location.origin;
+    if (githubPagesUrl.includes('github.io')) {
+        // Already on GitHub Pages, use current URL
+        const path = window.location.pathname.replace(/\/$/, '') || '';
+        githubPagesUrl = githubPagesUrl + path;
+    } else {
+        // Fallback to correct GitHub Pages URL
+        githubPagesUrl = 'https://emadamr53.github.io/resumebuilder';
+    }
+    // Ensure URL doesn't end with trailing slash for cleaner QR code
+    githubPagesUrl = githubPagesUrl.replace(/\/$/, '');
     const qrUrl = githubPagesUrl;
     
     document.getElementById('qrUrl').textContent = qrUrl;
@@ -826,8 +837,11 @@ function downloadQRCode() {
 function initializePWA() {
     // Register service worker if available
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('sw.js').catch(() => {
-            // Service worker registration failed, continue without it
+        // Use relative path for service worker
+        const swPath = './sw.js';
+        navigator.serviceWorker.register(swPath).catch((err) => {
+            console.log('Service worker registration failed:', err);
+            // Continue without service worker
         });
     }
     

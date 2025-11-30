@@ -1,30 +1,75 @@
-// Resume Builder Web App - Main JavaScript
+// Resume Builder Web App - Complete JavaScript
 
 // Local Storage Keys
 const STORAGE_KEY_USERS = 'resumebuilder_users';
 const STORAGE_KEY_CURRENT_USER = 'resumebuilder_current_user';
 const STORAGE_KEY_RESUMES = 'resumebuilder_resumes';
+const STORAGE_KEY_THEME = 'resumebuilder_theme';
+const STORAGE_KEY_DARK_MODE = 'resumebuilder_dark_mode';
 
-// Initialize App
+// App State
 let currentUser = null;
 let currentResume = null;
+let currentTheme = 'professional';
+let isDarkMode = true;
+let selectedThemeForPreview = 'professional';
 
-// Initialize on load
+// Theme configurations
+const themes = {
+    classic: {
+        name: 'Classic',
+        primaryColor: '#8B7355',
+        secondaryColor: '#A0826D',
+        bgColor: '#F5F5DC',
+        textColor: '#2C2C2C'
+    },
+    modern: {
+        name: 'Modern',
+        primaryColor: '#667eea',
+        secondaryColor: '#764ba2',
+        bgColor: '#FFFFFF',
+        textColor: '#1a1a2e'
+    },
+    professional: {
+        name: 'Professional',
+        primaryColor: '#2c3e50',
+        secondaryColor: '#34495e',
+        bgColor: '#FFFFFF',
+        textColor: '#2c3e50'
+    },
+    creative: {
+        name: 'Creative',
+        primaryColor: '#e74c3c',
+        secondaryColor: '#c0392b',
+        bgColor: '#FFFFFF',
+        textColor: '#2c3e50'
+    }
+};
+
+// Initialize App
 document.addEventListener('DOMContentLoaded', () => {
+    loadThemeSettings();
     checkAuth();
     setupEventListeners();
     initializePWA();
+    applyTheme();
 });
 
-// Check if user is logged in
-function checkAuth() {
-    const userStr = localStorage.getItem(STORAGE_KEY_CURRENT_USER);
-    if (userStr) {
-        currentUser = JSON.parse(userStr);
-        showScreen('dashboardScreen');
-        updateWelcomeText();
+// Load theme settings from storage
+function loadThemeSettings() {
+    const savedTheme = localStorage.getItem(STORAGE_KEY_THEME);
+    const savedDarkMode = localStorage.getItem(STORAGE_KEY_DARK_MODE);
+    
+    if (savedTheme) {
+        currentTheme = savedTheme;
+        selectedThemeForPreview = savedTheme;
+    }
+    
+    if (savedDarkMode !== null) {
+        isDarkMode = savedDarkMode === 'true';
     } else {
-        showScreen('loginScreen');
+        // Default to dark mode if system preference is dark
+        isDarkMode = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
     }
 }
 
@@ -50,6 +95,9 @@ function setupEventListeners() {
     // Logout
     document.getElementById('logoutBtn').addEventListener('click', handleLogout);
     
+    // Theme toggle
+    document.getElementById('themeToggle').addEventListener('click', toggleDarkMode);
+    
     // Resume form
     document.getElementById('resumeForm').addEventListener('submit', handleResumeSave);
 }
@@ -66,6 +114,10 @@ function showScreen(screenId) {
         loadResumePreview();
     } else if (screenId === 'resumeFormScreen') {
         loadResumeForm();
+    } else if (screenId === 'qrCodeScreen') {
+        generateQRCode();
+    } else if (screenId === 'themeSelectionScreen') {
+        highlightSelectedTheme();
     }
 }
 
@@ -158,7 +210,7 @@ function handleResumeSave(e) {
         email: document.getElementById('resumeEmail').value,
         phone: document.getElementById('resumePhone').value,
         address: document.getElementById('resumeAddress').value,
-        skills: document.getElementById('resumeSkills').value.split(',').map(s => s.trim()),
+        skills: document.getElementById('resumeSkills').value.split(',').map(s => s.trim()).filter(s => s),
         experiences: getExperiences(),
         education: getEducation()
     };
@@ -256,17 +308,17 @@ function loadResumeForm() {
         // Load experiences
         const expContainer = document.getElementById('experienceContainer');
         expContainer.innerHTML = '';
-        if (resume.experiences) {
+        if (resume.experiences && resume.experiences.length > 0) {
             resume.experiences.forEach(exp => {
                 const item = document.createElement('div');
                 item.className = 'exp-item';
                 item.innerHTML = `
-                    <input type="text" data-field="jobTitle" value="${exp.jobTitle || ''}" placeholder="Job Title">
-                    <input type="text" data-field="company" value="${exp.company || ''}" placeholder="Company">
-                    <input type="text" data-field="location" value="${exp.location || ''}" placeholder="Location">
-                    <input type="text" data-field="startDate" value="${exp.startDate || ''}" placeholder="Start Date">
-                    <input type="text" data-field="endDate" value="${exp.endDate || ''}" placeholder="End Date">
-                    <textarea data-field="description" placeholder="Description">${exp.description || ''}</textarea>
+                    <input type="text" data-field="jobTitle" value="${escapeHtml(exp.jobTitle || '')}" placeholder="Job Title">
+                    <input type="text" data-field="company" value="${escapeHtml(exp.company || '')}" placeholder="Company">
+                    <input type="text" data-field="location" value="${escapeHtml(exp.location || '')}" placeholder="Location">
+                    <input type="text" data-field="startDate" value="${escapeHtml(exp.startDate || '')}" placeholder="Start Date">
+                    <input type="text" data-field="endDate" value="${escapeHtml(exp.endDate || '')}" placeholder="End Date">
+                    <textarea data-field="description" placeholder="Description">${escapeHtml(exp.description || '')}</textarea>
                     <button type="button" class="remove-btn" onclick="this.parentElement.remove()">Remove</button>
                 `;
                 expContainer.appendChild(item);
@@ -276,22 +328,29 @@ function loadResumeForm() {
         // Load education
         const eduContainer = document.getElementById('educationContainer');
         eduContainer.innerHTML = '';
-        if (resume.education) {
+        if (resume.education && resume.education.length > 0) {
             resume.education.forEach(edu => {
                 const item = document.createElement('div');
                 item.className = 'edu-item';
                 item.innerHTML = `
-                    <input type="text" data-field="institution" value="${edu.institution || ''}" placeholder="Institution">
-                    <input type="text" data-field="degree" value="${edu.degree || ''}" placeholder="Degree">
-                    <input type="text" data-field="field" value="${edu.field || ''}" placeholder="Field">
-                    <input type="text" data-field="year" value="${edu.year || ''}" placeholder="Year">
-                    <input type="text" data-field="gpa" value="${edu.gpa || ''}" placeholder="GPA">
+                    <input type="text" data-field="institution" value="${escapeHtml(edu.institution || '')}" placeholder="Institution">
+                    <input type="text" data-field="degree" value="${escapeHtml(edu.degree || '')}" placeholder="Degree">
+                    <input type="text" data-field="field" value="${escapeHtml(edu.field || '')}" placeholder="Field">
+                    <input type="text" data-field="year" value="${escapeHtml(edu.year || '')}" placeholder="Year">
+                    <input type="text" data-field="gpa" value="${escapeHtml(edu.gpa || '')}" placeholder="GPA">
                     <button type="button" class="remove-btn" onclick="this.parentElement.remove()">Remove</button>
                 `;
                 eduContainer.appendChild(item);
             });
         }
     }
+}
+
+// Escape HTML to prevent XSS
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
 }
 
 // Load resume preview
@@ -304,30 +363,68 @@ function loadResumePreview() {
         return;
     }
     
+    const theme = themes[selectedThemeForPreview] || themes.professional;
+    
     let html = `
-        <h1>${resume.name || 'Your Name'}</h1>
-        <p>${resume.email || ''} | ${resume.phone || ''}</p>
-        ${resume.address ? `<p>${resume.address}</p>` : ''}
-        
-        <h2>Skills</h2>
-        <p>${resume.skills?.join(', ') || 'No skills listed'}</p>
-        
-        <h2>Experience</h2>
-        ${resume.experiences?.map(exp => `
-            <div style="margin-bottom: 15px;">
-                <strong>${exp.jobTitle || 'Job Title'}</strong> - ${exp.company || 'Company'}<br>
-                ${exp.location ? `${exp.location} | ` : ''}${exp.startDate || ''} - ${exp.endDate || ''}<br>
-                ${exp.description ? `<p style="margin-top: 5px;">${exp.description}</p>` : ''}
+        <div class="resume-content theme-${selectedThemeForPreview}">
+            <div class="resume-header">
+                <h1>${escapeHtml(resume.name || 'Your Name')}</h1>
+                <div class="contact-info">
+                    ${resume.email ? `<span>${escapeHtml(resume.email)}</span>` : ''}
+                    ${resume.phone ? `<span>${escapeHtml(resume.phone)}</span>` : ''}
+                    ${resume.address ? `<span>${escapeHtml(resume.address)}</span>` : ''}
+                </div>
             </div>
-        `).join('') || '<p>No experience listed</p>'}
-        
-        <h2>Education</h2>
-        ${resume.education?.map(edu => `
-            <div style="margin-bottom: 15px;">
-                <strong>${edu.degree || 'Degree'}</strong> in ${edu.field || 'Field'}<br>
-                ${edu.institution || 'Institution'}${edu.year ? `, ${edu.year}` : ''}${edu.gpa ? ` | GPA: ${edu.gpa}` : ''}
+            
+            ${resume.skills && resume.skills.length > 0 ? `
+            <div class="resume-section">
+                <h2>Skills</h2>
+                <div class="skills-list">
+                    ${resume.skills.map(skill => `<span class="skill-tag">${escapeHtml(skill)}</span>`).join('')}
+                </div>
             </div>
-        `).join('') || '<p>No education listed</p>'}
+            ` : ''}
+            
+            ${resume.experiences && resume.experiences.length > 0 ? `
+            <div class="resume-section">
+                <h2>Experience</h2>
+                ${resume.experiences.map(exp => `
+                    <div class="experience-item">
+                        <div class="exp-header">
+                            <strong>${escapeHtml(exp.jobTitle || 'Job Title')}</strong>
+                            <span class="exp-company">${escapeHtml(exp.company || 'Company')}</span>
+                        </div>
+                        ${exp.location || exp.startDate || exp.endDate ? `
+                        <div class="exp-meta">
+                            ${exp.location ? `<span>📍 ${escapeHtml(exp.location)}</span>` : ''}
+                            ${exp.startDate || exp.endDate ? `<span>📅 ${escapeHtml(exp.startDate || '')} - ${escapeHtml(exp.endDate || '')}</span>` : ''}
+                        </div>
+                        ` : ''}
+                        ${exp.description ? `<p class="exp-description">${escapeHtml(exp.description)}</p>` : ''}
+                    </div>
+                `).join('')}
+            </div>
+            ` : ''}
+            
+            ${resume.education && resume.education.length > 0 ? `
+            <div class="resume-section">
+                <h2>Education</h2>
+                ${resume.education.map(edu => `
+                    <div class="education-item">
+                        <div class="edu-header">
+                            <strong>${escapeHtml(edu.degree || 'Degree')}</strong>
+                            ${edu.field ? `<span>in ${escapeHtml(edu.field)}</span>` : ''}
+                        </div>
+                        <div class="edu-meta">
+                            ${edu.institution ? `<span>${escapeHtml(edu.institution)}</span>` : ''}
+                            ${edu.year ? `<span>${escapeHtml(edu.year)}</span>` : ''}
+                            ${edu.gpa ? `<span>GPA: ${escapeHtml(edu.gpa)}</span>` : ''}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+            ` : ''}
+        </div>
     `;
     
     preview.innerHTML = html;
@@ -346,54 +443,154 @@ function getResumes() {
     return resumesStr ? JSON.parse(resumesStr) : [];
 }
 
+// Check authentication
+function checkAuth() {
+    const userStr = localStorage.getItem(STORAGE_KEY_CURRENT_USER);
+    if (userStr) {
+        currentUser = JSON.parse(userStr);
+        showScreen('dashboardScreen');
+        updateWelcomeText();
+    } else {
+        showScreen('loginScreen');
+    }
+}
+
+// Theme Management
+function selectTheme(themeName) {
+    currentTheme = themeName;
+    selectedThemeForPreview = themeName;
+    highlightSelectedTheme();
+}
+
+function highlightSelectedTheme() {
+    document.querySelectorAll('.theme-card').forEach(card => {
+        card.classList.remove('selected');
+        if (card.dataset.theme === selectedThemeForPreview) {
+            card.classList.add('selected');
+        }
+    });
+}
+
+function applyTheme() {
+    localStorage.setItem(STORAGE_KEY_THEME, selectedThemeForPreview);
+    currentTheme = selectedThemeForPreview;
+    loadResumePreview();
+    showScreen('previewScreen');
+}
+
+function toggleDarkMode() {
+    isDarkMode = !isDarkMode;
+    localStorage.setItem(STORAGE_KEY_DARK_MODE, isDarkMode.toString());
+    applyTheme();
+    updateThemeToggleButton();
+}
+
+function updateThemeToggleButton() {
+    const btn = document.getElementById('themeToggle');
+    btn.textContent = isDarkMode ? '☀️' : '🌙';
+    btn.title = isDarkMode ? 'Switch to Light Mode' : 'Switch to Dark Mode';
+}
+
+function applyTheme() {
+    document.body.classList.toggle('light-mode', !isDarkMode);
+    updateThemeToggleButton();
+}
+
 // Search jobs
 function searchJobs() {
     const skills = document.getElementById('jobSkills').value;
     const location = document.getElementById('jobLocation').value;
     const results = document.getElementById('jobResults');
     
-    results.innerHTML = '<div class="loading">Searching for jobs...</div>';
+    // Use skills from resume if available
+    if (!skills && currentResume && currentResume.skills) {
+        document.getElementById('jobSkills').value = currentResume.skills.join(', ');
+    }
     
-    // Simulate job search (replace with real API call)
+    results.innerHTML = '<div class="loading">🔍 Searching for jobs...</div>';
+    
+    // Simulate AI-powered job search
     setTimeout(() => {
-        const mockJobs = [
-            {
-                title: `${skills || 'Software'} Developer`,
-                company: 'Tech Corp',
-                location: location || 'Remote',
-                salary: '$80K - $120K',
-                type: 'Full-time'
-            },
-            {
-                title: `Senior ${skills || 'Software'} Engineer`,
-                company: 'Innovation Labs',
-                location: location || 'Remote',
-                salary: '$120K - $160K',
-                type: 'Full-time'
-            },
-            {
-                title: `${skills || 'Software'} Developer`,
-                company: 'StartupXYZ',
-                location: location || 'Remote',
-                salary: '$70K - $100K',
-                type: 'Full-time'
-            }
-        ];
+        const skillArray = skills.toLowerCase().split(',').map(s => s.trim());
+        const mockJobs = generateJobSuggestions(skillArray, location);
         
         if (mockJobs.length === 0) {
             results.innerHTML = '<div class="empty-state">No jobs found. Try different keywords.</div>';
         } else {
             results.innerHTML = mockJobs.map(job => `
                 <div class="job-card">
-                    <h3>${job.title}</h3>
-                    <div class="company">${job.company}</div>
-                    <div class="details">📍 ${job.location} | ${job.type}</div>
-                    <div class="salary">💰 ${job.salary}</div>
-                    <button class="btn btn-primary" onclick="applyToJob('${job.title}', '${job.company}')">Apply Now</button>
+                    <h3>${escapeHtml(job.title)}</h3>
+                    <div class="company">${escapeHtml(job.company)}</div>
+                    <div class="details">📍 ${escapeHtml(job.location)} | ${escapeHtml(job.type)}</div>
+                    <div class="salary">💰 ${escapeHtml(job.salary)}</div>
+                    <div class="match-score">${escapeHtml(job.match)} match</div>
+                    <button class="btn btn-primary" onclick="applyToJob('${escapeHtml(job.title)}', '${escapeHtml(job.company)}')">Apply Now</button>
                 </div>
             `).join('');
         }
     }, 1000);
+}
+
+// Generate job suggestions based on skills
+function generateJobSuggestions(skills, location) {
+    const jobMappings = {
+        'java': ['Java Developer', 'Backend Developer', 'Software Engineer'],
+        'python': ['Python Developer', 'Data Scientist', 'Machine Learning Engineer'],
+        'javascript': ['Frontend Developer', 'Full Stack Developer', 'React Developer'],
+        'react': ['React Developer', 'Frontend Developer', 'UI Developer'],
+        'node': ['Node.js Developer', 'Backend Developer', 'Full Stack Developer'],
+        'sql': ['Database Administrator', 'Data Analyst', 'Backend Developer'],
+        'aws': ['Cloud Engineer', 'DevOps Engineer', 'Cloud Architect'],
+        'docker': ['DevOps Engineer', 'Platform Engineer', 'SRE']
+    };
+    
+    const companies = ['Google', 'Microsoft', 'Amazon', 'Apple', 'Meta', 'Netflix', 'Spotify', 'Uber'];
+    const jobTypes = ['Full-time', 'Remote', 'Contract', 'Part-time'];
+    
+    const jobs = [];
+    const addedTitles = new Set();
+    
+    skills.forEach((skill, index) => {
+        const jobTitles = jobMappings[skill] || [`${skill.charAt(0).toUpperCase() + skill.slice(1)} Developer`];
+        
+        jobTitles.forEach(title => {
+            if (!addedTitles.has(title) && jobs.length < 8) {
+                addedTitles.add(title);
+                const company = companies[index % companies.length];
+                const jobType = jobTypes[index % jobTypes.length];
+                const salary = '$' + (80 + (index * 15)) + 'K - $' + (120 + (index * 20)) + 'K';
+                const match = (85 + Math.floor(Math.random() * 15)) + '%';
+                
+                jobs.push({
+                    title,
+                    company,
+                    location: location || 'Remote',
+                    type: jobType,
+                    salary,
+                    match
+                });
+            }
+        });
+    });
+    
+    // Fill remaining slots if needed
+    while (jobs.length < 6) {
+        const company = companies[jobs.length % companies.length];
+        const jobType = jobTypes[jobs.length % jobTypes.length];
+        const salary = '$' + (70 + (jobs.length * 10)) + 'K - $' + (100 + (jobs.length * 15)) + 'K';
+        const match = (75 + Math.floor(Math.random() * 20)) + '%';
+        
+        jobs.push({
+            title: 'Software Engineer',
+            company,
+            location: location || 'Remote',
+            type: jobType,
+            salary,
+            match
+        });
+    }
+    
+    return jobs;
 }
 
 // Apply to job
@@ -403,19 +600,233 @@ function applyToJob(title, company) {
 
 // Export as PDF
 function exportAsPDF() {
-    alert('PDF export would be implemented here.\n\nIn a real app, this would use a PDF generation library like jsPDF.');
+    const resume = getCurrentResume();
+    if (!resume) {
+        alert('No resume to export. Please create a resume first.');
+        return;
+    }
+    
+    try {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+        
+        // Set theme colors
+        const theme = themes[selectedThemeForPreview] || themes.professional;
+        
+        // Header
+        doc.setFillColor(parseInt(theme.primaryColor.substring(1, 3), 16), 
+                        parseInt(theme.primaryColor.substring(3, 5), 16), 
+                        parseInt(theme.primaryColor.substring(5, 7), 16));
+        doc.rect(0, 0, 210, 40, 'F');
+        
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(24);
+        doc.text(resume.name || 'Your Name', 20, 25);
+        
+        doc.setFontSize(10);
+        let yPos = 35;
+        if (resume.email) doc.text(resume.email, 20, yPos);
+        if (resume.phone) doc.text(resume.phone, 20, yPos + 5);
+        if (resume.address) doc.text(resume.address, 20, yPos + 10);
+        
+        let currentY = 50;
+        doc.setTextColor(0, 0, 0);
+        
+        // Skills
+        if (resume.skills && resume.skills.length > 0) {
+            doc.setFontSize(16);
+            doc.text('Skills', 20, currentY);
+            currentY += 10;
+            doc.setFontSize(10);
+            doc.text(resume.skills.join(', '), 20, currentY);
+            currentY += 15;
+        }
+        
+        // Experience
+        if (resume.experiences && resume.experiences.length > 0) {
+            doc.setFontSize(16);
+            doc.text('Experience', 20, currentY);
+            currentY += 10;
+            doc.setFontSize(10);
+            resume.experiences.forEach(exp => {
+                doc.setFont(undefined, 'bold');
+                doc.text(`${exp.jobTitle || 'Job Title'} - ${exp.company || 'Company'}`, 20, currentY);
+                currentY += 7;
+                doc.setFont(undefined, 'normal');
+                if (exp.description) {
+                    const lines = doc.splitTextToSize(exp.description, 170);
+                    doc.text(lines, 20, currentY);
+                    currentY += lines.length * 5;
+                }
+                currentY += 5;
+            });
+        }
+        
+        // Education
+        if (resume.education && resume.education.length > 0) {
+            doc.setFontSize(16);
+            doc.text('Education', 20, currentY);
+            currentY += 10;
+            doc.setFontSize(10);
+            resume.education.forEach(edu => {
+                doc.setFont(undefined, 'bold');
+                doc.text(`${edu.degree || 'Degree'}${edu.field ? ' in ' + edu.field : ''}`, 20, currentY);
+                currentY += 7;
+                doc.setFont(undefined, 'normal');
+                let eduText = '';
+                if (edu.institution) eduText += edu.institution;
+                if (edu.year) eduText += (eduText ? ', ' : '') + edu.year;
+                if (edu.gpa) eduText += (eduText ? ' | ' : '') + 'GPA: ' + edu.gpa;
+                if (eduText) {
+                    doc.text(eduText, 20, currentY);
+                    currentY += 7;
+                }
+                currentY += 5;
+            });
+        }
+        
+        // Save PDF
+        doc.save(`${resume.name || 'resume'}_resume.pdf`);
+        alert('PDF exported successfully!');
+    } catch (error) {
+        console.error('PDF export error:', error);
+        alert('Error exporting PDF. Please try again.');
+    }
 }
 
-// Export as Word
+// Export as Word (using simple HTML download)
 function exportAsWord() {
-    alert('Word export would be implemented here.\n\nIn a real app, this would use a library like docx.');
+    const resume = getCurrentResume();
+    if (!resume) {
+        alert('No resume to export. Please create a resume first.');
+        return;
+    }
+    
+    try {
+        let htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>${resume.name || 'Resume'}</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 40px; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #2c3e50; padding-bottom: 10px; }
+        h2 { color: #34495e; margin-top: 30px; border-bottom: 1px solid #bdc3c7; padding-bottom: 5px; }
+        .contact-info { margin: 10px 0; }
+        .section { margin: 20px 0; }
+        .skill-tag { display: inline-block; background: #ecf0f1; padding: 5px 10px; margin: 5px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>${escapeHtml(resume.name || 'Your Name')}</h1>
+    <div class="contact-info">
+        ${resume.email ? `<p>Email: ${escapeHtml(resume.email)}</p>` : ''}
+        ${resume.phone ? `<p>Phone: ${escapeHtml(resume.phone)}</p>` : ''}
+        ${resume.address ? `<p>Address: ${escapeHtml(resume.address)}</p>` : ''}
+    </div>
+    
+    ${resume.skills && resume.skills.length > 0 ? `
+    <div class="section">
+        <h2>Skills</h2>
+        <p>${resume.skills.map(s => `<span class="skill-tag">${escapeHtml(s)}</span>`).join(' ')}</p>
+    </div>
+    ` : ''}
+    
+    ${resume.experiences && resume.experiences.length > 0 ? `
+    <div class="section">
+        <h2>Experience</h2>
+        ${resume.experiences.map(exp => `
+            <div>
+                <h3>${escapeHtml(exp.jobTitle || 'Job Title')} - ${escapeHtml(exp.company || 'Company')}</h3>
+                ${exp.location || exp.startDate || exp.endDate ? `<p><em>${escapeHtml(exp.location || '')} ${exp.startDate || ''} - ${exp.endDate || ''}</em></p>` : ''}
+                ${exp.description ? `<p>${escapeHtml(exp.description)}</p>` : ''}
+            </div>
+        `).join('')}
+    </div>
+    ` : ''}
+    
+    ${resume.education && resume.education.length > 0 ? `
+    <div class="section">
+        <h2>Education</h2>
+        ${resume.education.map(edu => `
+            <div>
+                <h3>${escapeHtml(edu.degree || 'Degree')}${edu.field ? ' in ' + escapeHtml(edu.field) : ''}</h3>
+                <p>${escapeHtml(edu.institution || '')}${edu.year ? ', ' + escapeHtml(edu.year) : ''}${edu.gpa ? ' | GPA: ' + escapeHtml(edu.gpa) : ''}</p>
+            </div>
+        `).join('')}
+    </div>
+    ` : ''}
+</body>
+</html>
+        `;
+        
+        const blob = new Blob(['\ufeff', htmlContent], { type: 'application/msword' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${resume.name || 'resume'}_resume.doc`;
+        link.click();
+        URL.revokeObjectURL(url);
+        
+        alert('Word document exported successfully!');
+    } catch (error) {
+        console.error('Word export error:', error);
+        alert('Error exporting Word document. Please try again.');
+    }
+}
+
+// Generate QR Code
+function generateQRCode() {
+    const resume = getCurrentResume();
+    if (!resume) {
+        document.getElementById('qrCodeContainer').innerHTML = '<p class="empty-state">Create a resume first to generate QR code!</p>';
+        return;
+    }
+    
+    // Get the GitHub Pages URL
+    const githubPagesUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '') || 'https://amremad.github.io/resumebuilder/';
+    const qrUrl = githubPagesUrl;
+    
+    document.getElementById('qrUrl').textContent = qrUrl;
+    
+    // Clear previous QR code
+    const canvas = document.getElementById('qrCanvas');
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    // Generate QR code
+    QRCode.toCanvas(canvas, qrUrl, {
+        width: 300,
+        margin: 2,
+        color: {
+            dark: '#000000',
+            light: '#FFFFFF'
+        }
+    }, function (error) {
+        if (error) {
+            console.error('QR Code generation error:', error);
+            document.getElementById('qrCodeContainer').innerHTML = '<p class="empty-state">Error generating QR code. Please try again.</p>';
+        }
+    });
+}
+
+// Download QR Code
+function downloadQRCode() {
+    const canvas = document.getElementById('qrCanvas');
+    if (!canvas) return;
+    
+    const link = document.createElement('a');
+    link.download = 'resume-qr-code.png';
+    link.href = canvas.toDataURL();
+    link.click();
 }
 
 // Initialize PWA
 function initializePWA() {
     // Register service worker if available
     if ('serviceWorker' in navigator) {
-        navigator.serviceWorker.register('/sw.js').catch(() => {
+        navigator.serviceWorker.register('sw.js').catch(() => {
             // Service worker registration failed, continue without it
         });
     }
@@ -425,31 +836,11 @@ function initializePWA() {
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
-        showInstallPrompt();
+        // Could show install prompt UI here
     });
 }
 
-// Show install prompt
-function showInstallPrompt() {
-    const prompt = document.createElement('div');
-    prompt.className = 'install-prompt';
-    prompt.innerHTML = `
-        <p>Install Resume Builder as an app?</p>
-        <button onclick="installApp()">Install</button>
-    `;
-    document.body.appendChild(prompt);
+// Export resume (general function)
+function exportResume() {
+    showScreen('exportScreen');
 }
-
-// Install app
-function installApp() {
-    if (deferredPrompt) {
-        deferredPrompt.prompt();
-        deferredPrompt.userChoice.then((choiceResult) => {
-            if (choiceResult.outcome === 'accepted') {
-                console.log('User accepted the install prompt');
-            }
-            deferredPrompt = null;
-        });
-    }
-}
-

@@ -6,10 +6,14 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="theme-color" content="#667eea">
-    <title>Resume Builder - Web App</title>
+    <title>Resume Builder - Professional CV Creator</title>
     <link rel="manifest" href="manifest.json">
     <link rel="apple-touch-icon" href="icon-192.png">
     <link rel="stylesheet" href="styles.css">
+    <!-- External libraries for PDF and Word export -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
 </head>
 <body>
     <!-- Login Screen -->
@@ -74,7 +78,10 @@
     <div id="dashboardScreen" class="screen">
         <div class="header">
             <h2>Resume Builder</h2>
-            <button id="logoutBtn" class="btn-icon">🚪</button>
+            <div class="header-actions">
+                <button id="themeToggle" class="btn-icon" title="Toggle Dark/Light Mode">🌙</button>
+                <button id="logoutBtn" class="btn-icon" title="Logout">🚪</button>
+            </div>
         </div>
         
         <div class="container">
@@ -94,6 +101,12 @@
                     <p>See how your resume looks</p>
                 </div>
                 
+                <div class="card" onclick="showScreen('themeSelectionScreen')">
+                    <div class="card-icon">🎨</div>
+                    <h3>Choose Theme</h3>
+                    <p>Select CV template style</p>
+                </div>
+                
                 <div class="card" onclick="showScreen('jobFinderScreen')">
                     <div class="card-icon">🤖</div>
                     <h3>AI Job Finder</h3>
@@ -104,6 +117,12 @@
                     <div class="card-icon">💾</div>
                     <h3>Export Resume</h3>
                     <p>Download as PDF or Word</p>
+                </div>
+                
+                <div class="card" onclick="showScreen('qrCodeScreen')">
+                    <div class="card-icon">📱</div>
+                    <h3>QR Code</h3>
+                    <p>Generate QR code for your resume</p>
                 </div>
             </div>
         </div>
@@ -179,6 +198,42 @@
         </div>
     </div>
 
+    <!-- Theme Selection Screen -->
+    <div id="themeSelectionScreen" class="screen">
+        <div class="header">
+            <button onclick="showScreen('dashboardScreen')" class="btn-back">← Back</button>
+            <h2>Choose CV Theme</h2>
+            <div></div>
+        </div>
+        
+        <div class="container">
+            <p class="subtitle">Select a theme for your resume</p>
+            <div class="themes-grid">
+                <div class="theme-card" data-theme="classic" onclick="selectTheme('classic')">
+                    <div class="theme-preview classic-preview"></div>
+                    <h3>Classic</h3>
+                    <p>Traditional and timeless design</p>
+                </div>
+                <div class="theme-card" data-theme="modern" onclick="selectTheme('modern')">
+                    <div class="theme-preview modern-preview"></div>
+                    <h3>Modern</h3>
+                    <p>Clean and contemporary style</p>
+                </div>
+                <div class="theme-card" data-theme="professional" onclick="selectTheme('professional')">
+                    <div class="theme-preview professional-preview"></div>
+                    <h3>Professional</h3>
+                    <p>Corporate and formal layout</p>
+                </div>
+                <div class="theme-card" data-theme="creative" onclick="selectTheme('creative')">
+                    <div class="theme-preview creative-preview"></div>
+                    <h3>Creative</h3>
+                    <p>Bold and artistic presentation</p>
+                </div>
+            </div>
+            <button onclick="applyTheme()" class="btn btn-primary btn-large" style="margin-top: 20px;">Apply Theme & Preview</button>
+        </div>
+    </div>
+
     <!-- Job Finder Screen -->
     <div id="jobFinderScreen" class="screen">
         <div class="header">
@@ -220,7 +275,26 @@
         </div>
     </div>
 
+    <!-- QR Code Screen -->
+    <div id="qrCodeScreen" class="screen">
+        <div class="header">
+            <button onclick="showScreen('dashboardScreen')" class="btn-back">← Back</button>
+            <h2>QR Code Generator</h2>
+            <div></div>
+        </div>
+        
+        <div class="container">
+            <div class="qr-section">
+                <p class="subtitle">Scan this QR code to open your resume on any device</p>
+                <div id="qrCodeContainer" class="qr-container">
+                    <canvas id="qrCanvas"></canvas>
+                </div>
+                <p class="qr-url" id="qrUrl"></p>
+                <button onclick="downloadQRCode()" class="btn btn-primary btn-large">📥 Download QR Code</button>
+            </div>
+        </div>
+    </div>
+
     <script src="app.js"></script>
 </body>
 </html>
-

@@ -928,3 +928,169 @@ function initializePWA() {
 function exportResume() {
     showScreen('exportScreen');
 }
+
+// Show public resume page
+function showPublicResumePage(username = null) {
+    // If username not provided, use current user
+    if (!username && currentUser) {
+        username = currentUser.username;
+    }
+    
+    if (!username) {
+        alert('Please login first to view your public page!');
+        showScreen('loginScreen');
+        return;
+    }
+    
+    // Get user's resume
+    const users = getUsers();
+    const user = users.find(u => u.username === username || u.email === username);
+    
+    if (!user) {
+        document.getElementById('publicResumeContent').innerHTML = 
+            '<p class="empty-state">User not found!</p>';
+        showScreen('publicResumeScreen');
+        return;
+    }
+    
+    // Get user's resume
+    const resumes = getResumes();
+    const resume = resumes.find(r => r.userId === user.id);
+    
+    if (!resume) {
+        document.getElementById('publicResumeContent').innerHTML = 
+            '<p class="empty-state">This user has not created a resume yet.</p>';
+        showScreen('publicResumeScreen');
+        return;
+    }
+    
+    // Update page title
+    document.getElementById('publicUserName').textContent = resume.name || user.name || user.username + "'s Resume";
+    
+    // Load public resume preview
+    loadPublicResumePreview(resume);
+    showScreen('publicResumeScreen');
+    
+    // Update URL without reload
+    const newUrl = window.location.origin + window.location.pathname + '?user=' + encodeURIComponent(username);
+    window.history.pushState({ path: newUrl }, '', newUrl);
+}
+
+// Load public resume preview
+function loadPublicResumePreview(resume) {
+    const preview = document.getElementById('publicResumeContent');
+    
+    if (!resume) {
+        preview.innerHTML = '<p class="empty-state">No resume data available.</p>';
+        return;
+    }
+    
+    const theme = themes[selectedThemeForPreview] || themes.professional;
+    
+    let html = `
+        <div class="resume-content theme-${selectedThemeForPreview}">
+            <div class="resume-header">
+                <h1>${escapeHtml(resume.name || 'Your Name')}</h1>
+                <div class="contact-info">
+                    ${resume.email ? `<span>${escapeHtml(resume.email)}</span>` : ''}
+                    ${resume.phone ? `<span>${escapeHtml(resume.phone)}</span>` : ''}
+                    ${resume.address ? `<span>${escapeHtml(resume.address)}</span>` : ''}
+                </div>
+            </div>
+            
+            ${resume.skills && resume.skills.length > 0 ? `
+            <div class="resume-section">
+                <h2>Skills</h2>
+                <div class="skills-list">
+                    ${resume.skills.map(skill => `<span class="skill-tag">${escapeHtml(skill)}</span>`).join('')}
+                </div>
+            </div>
+            ` : ''}
+            
+            ${resume.experiences && resume.experiences.length > 0 ? `
+            <div class="resume-section">
+                <h2>Experience</h2>
+                ${resume.experiences.map(exp => `
+                    <div class="experience-item">
+                        <div class="exp-header">
+                            <strong>${escapeHtml(exp.jobTitle || 'Job Title')}</strong>
+                            <span class="exp-company">${escapeHtml(exp.company || 'Company')}</span>
+                        </div>
+                        ${exp.location || exp.startDate || exp.endDate ? `
+                        <div class="exp-meta">
+                            ${exp.location ? `<span>📍 ${escapeHtml(exp.location)}</span>` : ''}
+                            ${exp.startDate || exp.endDate ? `<span>📅 ${escapeHtml(exp.startDate || '')} - ${escapeHtml(exp.endDate || '')}</span>` : ''}
+                        </div>
+                        ` : ''}
+                        ${exp.description ? `<p class="exp-description">${escapeHtml(exp.description)}</p>` : ''}
+                    </div>
+                `).join('')}
+            </div>
+            ` : ''}
+            
+            ${resume.education && resume.education.length > 0 ? `
+            <div class="resume-section">
+                <h2>Education</h2>
+                ${resume.education.map(edu => `
+                    <div class="education-item">
+                        <div class="edu-header">
+                            <strong>${escapeHtml(edu.degree || 'Degree')}</strong>
+                            ${edu.field ? `<span>in ${escapeHtml(edu.field)}</span>` : ''}
+                        </div>
+                        <div class="edu-meta">
+                            ${edu.institution ? `<span>${escapeHtml(edu.institution)}</span>` : ''}
+                            ${edu.year ? `<span>${escapeHtml(edu.year)}</span>` : ''}
+                            ${edu.gpa ? `<span>GPA: ${escapeHtml(edu.gpa)}</span>` : ''}
+                        </div>
+                    </div>
+                `).join('')}
+            </div>
+            ` : ''}
+            
+            <div class="resume-section" style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ecf0f1; text-align: center;">
+                <p style="color: #777; font-size: 12px;">
+                    Created with Resume Builder | 
+                    <a href="${window.location.origin + window.location.pathname}" style="color: var(--accent-primary);">Create Your Resume</a>
+                </p>
+            </div>
+        </div>
+    `;
+    
+    preview.innerHTML = html;
+}
+
+// Get public resume URL
+function getPublicResumeURL(username = null) {
+    if (!username && currentUser) {
+        username = currentUser.username;
+    }
+    if (!username) return null;
+    
+    const baseUrl = window.location.origin + window.location.pathname;
+    return baseUrl + '?user=' + encodeURIComponent(username);
+}
+
+// Share public resume
+function sharePublicResume() {
+    const username = currentUser ? currentUser.username : null;
+    if (!username) {
+        alert('Please login first!');
+        return;
+    }
+    
+    const url = getPublicResumeURL(username);
+    if (navigator.share) {
+        navigator.share({
+            title: `${currentUser.name || currentUser.username}'s Resume`,
+            text: 'Check out my resume!',
+            url: url
+        }).catch(err => console.log('Error sharing:', err));
+    } else {
+        // Fallback: copy to clipboard
+        navigator.clipboard.writeText(url).then(() => {
+            alert('Resume URL copied to clipboard!\n\n' + url);
+        }).catch(() => {
+            prompt('Copy this URL to share your resume:', url);
+        });
+    }
+}

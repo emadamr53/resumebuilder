@@ -140,7 +140,8 @@ public class QRCodeGenerator {
         // 2. Netlify: https://your-app.netlify.app
         // 3. Your own domain: https://resumebuilder.yourdomain.com
         
-        return "https://amremad.github.io/resumebuilder/";
+        // Current GitHub Pages URL (corrected)
+        return "https://emadamr53.github.io/resumebuilder/";
         
         // For local testing:
         // return "http://localhost:8000/";

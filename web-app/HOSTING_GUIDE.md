@@ -1,174 +1,244 @@
-# 🌐 Web App Hosting Guide
+# 🌐 Web App Hosting Guide - NetBeans Edition
 
-## Quick Start - Host on GitHub Pages (Free & Easy)
+## ✅ Current Setup
 
-### Step 1: Create GitHub Repository
+Your web app files are in the **root directory** of your NetBeans project:
+- `index.html` - Main HTML file
+- `app.js` - JavaScript application
+- `styles.css` - Styles with theme support
+- `manifest.json` - PWA manifest
+- `sw.js` - Service worker
 
-1. Go to https://github.com/new
-2. Create a new repository named `resumebuilder`
-3. Make it **public** (required for free GitHub Pages)
-
-### Step 2: Upload Files
-
-```bash
-cd web-app
-git init
-git add .
-git commit -m "Initial commit - Resume Builder Web App"
-git branch -M main
-git remote add origin https://github.com/YOUR_USERNAME/resumebuilder.git
-git push -u origin main
-```
-
-### Step 3: Enable GitHub Pages
-
-1. Go to repository **Settings** → **Pages**
-2. Under **Source**, select **main** branch
-3. Select **/ (root)** folder
-4. Click **Save**
-
-### Step 4: Your Web App URL
-
-Your app will be available at:
-```
-https://YOUR_USERNAME.github.io/resumebuilder/
-```
-
-### Step 5: Update QR Code
-
-Edit `src/main/java/utils/QRCodeGenerator.java`:
-```java
-return "https://YOUR_USERNAME.github.io/resumebuilder/";
-```
+**GitHub Repository**: `emadamr53/resumebuilder`  
+**Live URL**: `https://emadamr53.github.io/resumebuilder/`
 
 ---
 
-## Alternative: Host on Netlify (Free & Easy)
+## 🚀 Quick Start - Test Locally in NetBeans
 
-### Step 1: Go to Netlify
+### Option 1: Using NetBeans Built-in Server
 
-1. Visit https://netlify.com
-2. Sign up for free account
+1. **Right-click** on `index.html` in NetBeans
+2. Select **Open in Browser** (or press `Shift + F6`)
+3. NetBeans will open it in your default browser
 
-### Step 2: Deploy
+### Option 2: Using NetBeans HTTP Server
 
-1. Drag and drop the `web-app` folder to Netlify
-2. Or connect your GitHub repository
-3. Netlify will automatically deploy
+1. In NetBeans, go to **Tools** → **Options** → **General** → **Web Browser**
+2. Set your preferred browser
+3. Right-click `index.html` → **View** → **View in Browser**
 
-### Step 3: Your URL
+### Option 3: Manual Local Server
 
-Your app will be at:
-```
-https://your-app-name.netlify.app
-```
-
----
-
-## Create App Icons
-
-The web app needs icon files. Create them:
-
-### Option 1: Use Online Tool
-
-1. Go to https://realfavicongenerator.net
-2. Upload a 512x512 PNG image
-3. Download the generated icons
-4. Place `icon-192.png` and `icon-512.png` in the `web-app` folder
-
-### Option 2: Create Manually
+Open terminal in NetBeans (Tools → Terminal) and run:
 
 ```bash
-# If you have a 1024x1024 icon.png:
-cd web-app
-sips -z 192 192 icon.png --out icon-192.png
-sips -z 512 512 icon.png --out icon-512.png
-```
-
----
-
-## Testing Locally
-
-### Using Python:
-
-```bash
-cd web-app
+# Python (if installed)
 python3 -m http.server 8000
-```
 
-Then open: http://localhost:8000
-
-### Using Node.js:
-
-```bash
-cd web-app
+# Or Node.js (if installed)
 npx http-server -p 8000
 ```
 
+Then open: `http://localhost:8000`
+
 ---
 
-## Features
+## 📤 Deploy to GitHub Pages from NetBeans
+
+### Step 1: Enable GitHub Pages
+
+1. Go to: https://github.com/emadamr53/resumebuilder/settings/pages
+2. Under **Source**, select: **main** branch
+3. Under **Folder**, select: **/ (root)**
+4. Click **Save**
+5. Wait 1-2 minutes for deployment
+
+### Step 2: Verify Deployment
+
+Your app will be live at:
+```
+https://emadamr53.github.io/resumebuilder/
+```
+
+### Step 3: Test QR Code
+
+1. Open the app: https://emadamr53.github.io/resumebuilder/
+2. Sign up or login
+3. Create a resume
+4. Go to **QR Code** screen
+5. The QR code will link to: `https://emadamr53.github.io/resumebuilder`
+
+---
+
+## 🔗 Update QR Code in Desktop App (NetBeans)
+
+After deploying, update the QR code URL in your Java desktop app:
+
+### Step 1: Open QR Code Generator
+
+In NetBeans, open:
+```
+src/main/java/utils/QRCodeGenerator.java
+```
+
+### Step 2: Update URL
+
+Find the `generateDownloadURL()` method and update it:
+
+```java
+public String generateDownloadURL() {
+    return "https://emadamr53.github.io/resumebuilder/";
+}
+```
+
+### Step 3: Rebuild
+
+1. In NetBeans, click **Clean and Build** (Shift + F11)
+2. Run the desktop app (F6)
+3. Generate QR code - it will now link to your web app!
+
+---
+
+## 🎨 Web App Features
+
+✅ **Complete Resume Builder**
+- User authentication (Sign up/Login)
+- Resume creation with personal info, skills, experience, education
+- Real-time preview with themes
+
+✅ **Theme System**
+- 4 Professional themes: Classic, Modern, Professional, Creative
+- Dark/Light mode toggle
+- Theme customization
+
+✅ **Export Options**
+- PDF export (using jsPDF)
+- Word document export
+- Professional formatting
+
+✅ **AI Job Finder**
+- Skill-based job suggestions
+- Location filtering
+- Match scoring
+
+✅ **QR Code Generator**
+- Generates QR code linking to your GitHub Pages URL
+- Downloadable as PNG image
+- Perfect for sharing
 
 ✅ **Progressive Web App (PWA)**
 - Installable on mobile devices
-- Works offline
+- Works offline (with service worker)
 - App-like experience
 
-✅ **Mobile Responsive**
-- Works on all screen sizes
-- Touch-friendly interface
-- Native app feel
+---
 
-✅ **Full Functionality**
-- User authentication
-- Resume creation & editing
-- AI Job Finder
-- Export options
+## 📁 Project Structure in NetBeans
+
+```
+AmrEmadResumeBuilder/
+├── index.html          ← Web app entry point
+├── app.js             ← JavaScript application
+├── styles.css         ← Styles with themes
+├── manifest.json      ← PWA manifest
+├── sw.js              ← Service worker
+├── src/
+│   └── main/
+│       └── java/      ← Java desktop app source
+│           └── utils/
+│               └── QRCodeGenerator.java  ← Update this for QR code
+└── web-app/           ← Backup copy of web files
+```
 
 ---
 
-## Custom Domain (Optional)
+## 🧪 Testing Checklist
 
-### On GitHub Pages:
+### Local Testing (NetBeans)
+- [ ] Open `index.html` in browser from NetBeans
+- [ ] Can sign up/login
+- [ ] Can create resume
+- [ ] Can preview resume
+- [ ] Can select themes
+- [ ] Dark/light mode toggle works
+- [ ] Can generate QR code
+- [ ] Can export as PDF/Word
 
-1. Go to repository **Settings** → **Pages**
-2. Under **Custom domain**, enter your domain
-3. Follow DNS setup instructions
-
-### On Netlify:
-
-1. Go to **Domain settings**
-2. Add your custom domain
-3. Follow DNS configuration
-
----
-
-## Update QR Code in Desktop App
-
-After hosting, update the QR code URL:
-
-1. Open `src/main/java/utils/QRCodeGenerator.java`
-2. Change `generateDownloadURL()` to return your web app URL
-3. Rebuild the desktop app
+### GitHub Pages Testing
+- [ ] Site loads at https://emadamr53.github.io/resumebuilder/
+- [ ] All features work on live site
+- [ ] QR code links to correct URL
+- [ ] Service worker works (check Network tab)
+- [ ] PWA can be installed on mobile
 
 ---
 
-## Troubleshooting
+## 🔧 Troubleshooting
 
-### Icons not showing:
-- Make sure `icon-192.png` and `icon-512.png` exist in `web-app` folder
-- Check file paths in `manifest.json`
+### Issue: Blank Page in Browser
+**Solution:**
+1. Open browser console (F12)
+2. Check for JavaScript errors
+3. Make sure all files are in root directory
+4. Clear browser cache (Ctrl+Shift+Delete)
 
-### Service worker not working:
-- Make sure you're using HTTPS (or localhost)
+### Issue: Service Worker Not Working
+**Solution:**
+- Service worker requires HTTPS (or localhost)
 - Check browser console for errors
+- App will still work without service worker
 
-### App not installable:
-- Make sure `manifest.json` is correct
-- Check that service worker is registered
-- Use HTTPS (required for PWA)
+### Issue: QR Code Shows Wrong URL
+**Solution:**
+1. Check `app.js` - `generateQRCode()` function
+2. It should auto-detect GitHub Pages URL
+3. If not, manually set: `https://emadamr53.github.io/resumebuilder`
+
+### Issue: Icons Not Showing
+**Solution:**
+- Create `icon-192.png` and `icon-512.png` in root directory
+- Or remove icon references from `manifest.json` (app will still work)
+
+### Issue: GitHub Pages Not Updating
+**Solution:**
+1. Make sure files are committed and pushed
+2. Wait 2-3 minutes after push
+3. Clear browser cache
+4. Check GitHub Actions tab for build status
 
 ---
 
-**That's it! Your web app is ready to share via QR code! 🎉**
+## 📱 Mobile Testing
 
+1. Open https://emadamr53.github.io/resumebuilder/ on your phone
+2. Test all features
+3. Try "Add to Home Screen" (PWA install)
+4. Scan QR code with phone camera
+5. Verify it opens the web app
+
+---
+
+## 🎯 Next Steps
+
+1. ✅ **Test locally** in NetBeans
+2. ✅ **Deploy to GitHub Pages**
+3. ✅ **Update QR code** in desktop app
+4. ✅ **Test on mobile** devices
+5. ✅ **Share QR code** with others!
+
+---
+
+## 📝 Notes for NetBeans Users
+
+- The web app files are in the **root directory** (same level as `src/`)
+- This allows GitHub Pages to serve them directly
+- The Java desktop app is separate in `src/main/java/`
+- Both can coexist in the same NetBeans project
+- When you build the Java app, it doesn't affect the web files
+
+---
+
+**Your web app is ready! 🎉**
+
+Visit: **https://emadamr53.github.io/resumebuilder/**

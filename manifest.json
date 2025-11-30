@@ -1,0 +1,42 @@
+{
+  "name": "Resume Builder - Professional CV Creator",
+  "short_name": "Resume Builder",
+  "description": "Create, edit, and export professional resumes with themes, dark mode, and AI job suggestions",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f0f1a",
+  "theme_color": "#667eea",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "categories": ["productivity", "business", "education"],
+  "screenshots": [],
+  "shortcuts": [
+    {
+      "name": "Create Resume",
+      "short_name": "Create",
+      "description": "Start building a new resume",
+      "url": "/?action=create",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Preview Resume",
+      "short_name": "Preview",
+      "description": "View your resume",
+      "url": "/?action=preview",
+      "icons": [{ "src": "icon-192.png", "sizes": "192x192" }]
+    }
+  ]
+}

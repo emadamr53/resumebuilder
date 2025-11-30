@@ -49,11 +49,25 @@ const themes = {
 // Initialize App
 document.addEventListener('DOMContentLoaded', () => {
     loadThemeSettings();
+    checkURLParams(); // Check for public resume page
     checkAuth();
     setupEventListeners();
     initializePWA();
     applyTheme();
 });
+
+// Check URL parameters for public resume page
+function checkURLParams() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const username = urlParams.get('user');
+    
+    if (username) {
+        // Show public resume page
+        showPublicResumePage(username);
+        return true;
+    }
+    return false;
+}
 
 // Load theme settings from storage
 function loadThemeSettings() {
@@ -92,6 +106,20 @@ function setupEventListeners() {
         showScreen('loginScreen');
     });
     
+    // Forgot password
+    document.getElementById('showForgotPassword').addEventListener('click', (e) => {
+        e.preventDefault();
+        showScreen('forgotPasswordScreen');
+    });
+    
+    document.getElementById('showLoginFromForgot').addEventListener('click', (e) => {
+        e.preventDefault();
+        showScreen('loginScreen');
+    });
+    
+    // Forgot password form
+    document.getElementById('forgotPasswordForm').addEventListener('submit', handleForgotPassword);
+    
     // Logout
     document.getElementById('logoutBtn').addEventListener('click', handleLogout);
     
@@ -118,6 +146,8 @@ function showScreen(screenId) {
         generateQRCode();
     } else if (screenId === 'themeSelectionScreen') {
         highlightSelectedTheme();
+    } else if (screenId === 'publicResumeScreen') {
+        // Public resume page is handled by showPublicResumePage
     }
 }
 
@@ -184,6 +214,49 @@ function handleLogout() {
     currentUser = null;
     localStorage.removeItem(STORAGE_KEY_CURRENT_USER);
     showScreen('loginScreen');
+}
+
+// Handle forgot password
+function handleForgotPassword(e) {
+    e.preventDefault();
+    const email = document.getElementById('forgotEmail').value;
+    const newPassword = document.getElementById('forgotNewPassword').value;
+    const confirmPassword = document.getElementById('forgotConfirmPassword').value;
+    
+    // Validation
+    if (!email || !newPassword || !confirmPassword) {
+        alert('All fields are required!');
+        return;
+    }
+    
+    if (newPassword.length < 6) {
+        alert('Password must be at least 6 characters long!');
+        return;
+    }
+    
+    if (newPassword !== confirmPassword) {
+        alert('Passwords do not match!');
+        return;
+    }
+    
+    // Get users from storage
+    const users = getUsers();
+    const userIndex = users.findIndex(u => u.email === email);
+    
+    if (userIndex === -1) {
+        alert('Email not found in our system!');
+        return;
+    }
+    
+    // Update password
+    users[userIndex].password = newPassword;
+    localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(users));
+    
+    alert('Password reset successfully! You can now sign in with your new password.');
+    showScreen('loginScreen');
+    
+    // Clear form
+    document.getElementById('forgotPasswordForm').reset();
 }
 
 // Update welcome text
@@ -779,27 +852,24 @@ function exportAsWord() {
 // Generate QR Code
 function generateQRCode() {
     const resume = getCurrentResume();
-    if (!resume) {
+    if (!resume || !currentUser) {
         document.getElementById('qrCodeContainer').innerHTML = '<p class="empty-state">Create a resume first to generate QR code!</p>';
         return;
     }
     
-    // Get the GitHub Pages URL
-    // Use current origin (works for GitHub Pages) or fallback to correct GitHub Pages URL
-    let githubPagesUrl = window.location.origin;
-    if (githubPagesUrl.includes('github.io')) {
-        // Already on GitHub Pages, use current URL
-        const path = window.location.pathname.replace(/\/$/, '') || '';
-        githubPagesUrl = githubPagesUrl + path;
-    } else {
-        // Fallback to correct GitHub Pages URL
-        githubPagesUrl = 'https://emadamr53.github.io/resumebuilder';
+    // Generate QR code for public resume page
+    const publicUrl = getPublicResumeURL(currentUser.username);
+    if (!publicUrl) {
+        document.getElementById('qrCodeContainer').innerHTML = '<p class="empty-state">Unable to generate QR code. Please login first.</p>';
+        return;
     }
-    // Ensure URL doesn't end with trailing slash for cleaner QR code
-    githubPagesUrl = githubPagesUrl.replace(/\/$/, '');
-    const qrUrl = githubPagesUrl;
     
-    document.getElementById('qrUrl').textContent = qrUrl;
+    const qrUrl = publicUrl;
+    
+    document.getElementById('qrUrl').innerHTML = `
+        <strong>Public Resume URL:</strong><br>
+        <a href="${qrUrl}" target="_blank" style="color: var(--accent-primary); word-break: break-all;">${qrUrl}</a>
+    `;
     
     // Clear previous QR code
     const canvas = document.getElementById('qrCanvas');

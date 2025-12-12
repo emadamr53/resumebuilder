@@ -693,6 +693,41 @@ h1 {
     animation: fadeIn 0.3s ease;
 }
 
+/* File Manager */
+.file-manager-section {
+    max-width: 600px;
+    margin: 0 auto;
+}
+
+.file-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.file-location {
+    background: var(--bg-card);
+    padding: 15px;
+    border-radius: 10px;
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.file-location code {
+    background: var(--bg-secondary);
+    padding: 8px 12px;
+    border-radius: 5px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    color: var(--accent-primary);
+    flex: 1;
+    min-width: 200px;
+}
+
 /* Auto-Save Status */
 .auto-save-status {
     font-size: 12px;

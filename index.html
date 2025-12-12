@@ -164,6 +164,12 @@
                     <p>Download as PDF or Word</p>
                 </div>
                 
+                <div class="card" onclick="showScreen('fileManagerScreen')">
+                    <div class="card-icon">📁</div>
+                    <h3>File Manager</h3>
+                    <p>Save & load resumes from files</p>
+                </div>
+                
                 <div class="card" onclick="showScreen('qrCodeScreen')">
                     <div class="card-icon">📱</div>
                     <h3>QR Code</h3>
@@ -359,6 +365,59 @@
             </div>
         </div>
     </div>
+
+    <!-- File Manager Screen -->
+    <div id="fileManagerScreen" class="screen">
+        <div class="header">
+            <button onclick="showScreen('dashboardScreen')" class="btn-back">← Back</button>
+            <h2>File Manager</h2>
+            <div></div>
+        </div>
+        
+        <div class="container">
+            <div class="file-manager-section">
+                <h3>💾 Save Resume to MacBook</h3>
+                <p class="subtitle">Save your resume as a file on your MacBook in the "saved_resumes" folder</p>
+                
+                <div class="file-actions">
+                    <button onclick="saveResumeToFile()" class="btn btn-primary btn-large">
+                        💾 Save Resume to File
+                    </button>
+                    <button onclick="saveResumeToDownloads()" class="btn btn-secondary btn-large">
+                        📥 Save to Downloads Folder
+                    </button>
+                </div>
+                
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border);">
+                    <h3>📂 Load Resume from File</h3>
+                    <p class="subtitle">Load a previously saved resume file</p>
+                    
+                    <div class="file-actions">
+                        <button onclick="loadResumeFromFile()" class="btn btn-primary btn-large">
+                            📂 Load Resume from File
+                        </button>
+                    </div>
+                </div>
+                
+                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border);">
+                    <h3>📋 Saved Files Location</h3>
+                    <p class="subtitle">Your resumes are saved to:</p>
+                    <div class="file-location">
+                        <code id="fileLocation">~/Downloads/saved_resumes/</code>
+                        <button onclick="copyFileLocation()" class="btn btn-secondary" style="margin-left: 10px; padding: 5px 15px;">
+                            📋 Copy Path
+                        </button>
+                    </div>
+                    <p style="margin-top: 15px; font-size: 12px; color: var(--text-secondary);">
+                        💡 Tip: You can create a "saved_resumes" folder in your Downloads or Documents folder to organize your files.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden file input for loading files -->
+    <input type="file" id="fileInput" accept=".json,.txt" style="display: none;" onchange="handleFileLoad(event)">
 
     <script src="app.js"></script>
 </body>

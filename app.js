@@ -154,6 +154,8 @@ function showScreen(screenId) {
         highlightSelectedTheme();
     } else if (screenId === 'publicResumeScreen') {
         // Public resume page is handled by showPublicResumePage
+    } else if (screenId === 'fileManagerScreen') {
+        updateFileLocation();
     }
     
     // Debug: Log current state
@@ -1369,6 +1371,220 @@ function sharePublicResume() {
             prompt('Copy this URL to share your resume:', url);
         });
     }
+}
+
+// ==================== FILE MANAGEMENT ====================
+
+// Save resume to file on MacBook
+async function saveResumeToFile() {
+    if (!currentUser) {
+        alert('Please login first!');
+        return;
+    }
+    
+    const resume = getCurrentResume();
+    if (!resume) {
+        alert('No resume to save. Please create a resume first!');
+        return;
+    }
+    
+    try {
+        // Prepare resume data
+        const resumeData = {
+            ...resume,
+            exportedAt: new Date().toISOString(),
+            exportedBy: currentUser.name || currentUser.username,
+            version: '1.0'
+        };
+        
+        const jsonContent = JSON.stringify(resumeData, null, 2);
+        const fileName = `${resume.name || 'Resume'}_${new Date().toISOString().split('T')[0]}.json`;
+        
+        // Try File System Access API (modern browsers)
+        if ('showSaveFilePicker' in window) {
+            try {
+                const fileHandle = await window.showSaveFilePicker({
+                    suggestedName: fileName,
+                    types: [{
+                        description: 'JSON Resume File',
+                        accept: { 'application/json': ['.json'] }
+                    }],
+                    startIn: 'downloads' // Start in Downloads folder
+                });
+                
+                const writable = await fileHandle.createWritable();
+                await writable.write(jsonContent);
+                await writable.close();
+                
+                alert(`✅ Resume saved successfully!\n\nFile: ${fileHandle.name}\n\nYou can find it in your Downloads folder or the location you chose.`);
+                return;
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    console.error('File System Access API error:', err);
+                    // Fallback to download
+                }
+            }
+        }
+        
+        // Fallback: Download file
+        saveResumeToDownloads();
+        
+    } catch (error) {
+        console.error('Error saving file:', error);
+        alert('❌ Error saving file: ' + error.message);
+    }
+}
+
+// Save resume to Downloads folder
+function saveResumeToDownloads() {
+    if (!currentUser) {
+        alert('Please login first!');
+        return;
+    }
+    
+    const resume = getCurrentResume();
+    if (!resume) {
+        alert('No resume to save. Please create a resume first!');
+        return;
+    }
+    
+    try {
+        // Prepare resume data
+        const resumeData = {
+            ...resume,
+            exportedAt: new Date().toISOString(),
+            exportedBy: currentUser.name || currentUser.username,
+            version: '1.0'
+        };
+        
+        const jsonContent = JSON.stringify(resumeData, null, 2);
+        
+        // Create safe filename
+        const safeName = (resume.name || 'Resume').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        const dateStr = new Date().toISOString().split('T')[0];
+        const fileName = `${safeName}_${dateStr}.json`;
+        
+        // Create and download file
+        const blob = new Blob([jsonContent], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        // Update file location display
+        updateFileLocation();
+        
+        alert(`✅ Resume saved to Downloads!\n\nFile: ${fileName}\n\nLocation: ~/Downloads/${fileName}\n\nYou can move it to a "saved_resumes" folder if you want.`);
+        
+    } catch (error) {
+        console.error('Error saving to Downloads:', error);
+        alert('❌ Error saving file: ' + error.message);
+    }
+}
+
+// Load resume from file
+function loadResumeFromFile() {
+    if (!currentUser) {
+        alert('Please login first!');
+        return;
+    }
+    
+    // Trigger file input
+    document.getElementById('fileInput').click();
+}
+
+// Handle file load
+function handleFileLoad(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    
+    reader.onload = function(e) {
+        try {
+            const resumeData = JSON.parse(e.target.result);
+            
+            // Validate resume data
+            if (!resumeData.name && !resumeData.email) {
+                throw new Error('Invalid resume file format');
+            }
+            
+            // Confirm load
+            const confirmMsg = `Load resume for "${resumeData.name || 'Unknown'}"?\n\nThis will replace your current resume data.`;
+            if (!confirm(confirmMsg)) {
+                return;
+            }
+            
+            // Update resume data
+            const resume = {
+                id: Date.now(),
+                userId: currentUser.id,
+                name: resumeData.name || '',
+                email: resumeData.email || '',
+                phone: resumeData.phone || '',
+                address: resumeData.address || '',
+                skills: resumeData.skills || [],
+                experiences: resumeData.experiences || [],
+                education: resumeData.education || [],
+                lastUpdated: new Date().toISOString()
+            };
+            
+            // Save to localStorage
+            const resumes = getResumes();
+            const existingIndex = resumes.findIndex(r => r.userId === currentUser.id);
+            
+            if (existingIndex >= 0) {
+                resume.id = resumes[existingIndex].id;
+                resumes[existingIndex] = resume;
+            } else {
+                resumes.push(resume);
+            }
+            
+            localStorage.setItem(STORAGE_KEY_RESUMES, JSON.stringify(resumes));
+            currentResume = resume;
+            
+            alert('✅ Resume loaded successfully!\n\nYou can now view or edit it.');
+            
+            // Go to resume form to see loaded data
+            showScreen('resumeFormScreen');
+            
+        } catch (error) {
+            console.error('Error loading file:', error);
+            alert('❌ Error loading file:\n\n' + error.message + '\n\nPlease make sure you selected a valid resume JSON file.');
+        }
+    };
+    
+    reader.onerror = function() {
+        alert('❌ Error reading file. Please try again.');
+    };
+    
+    reader.readAsText(file);
+    
+    // Reset file input
+    event.target.value = '';
+}
+
+// Update file location display
+function updateFileLocation() {
+    const locationEl = document.getElementById('fileLocation');
+    if (locationEl) {
+        // Show Downloads path
+        locationEl.textContent = '~/Downloads/';
+    }
+}
+
+// Copy file location to clipboard
+function copyFileLocation() {
+    const location = '~/Downloads/saved_resumes/';
+    navigator.clipboard.writeText(location).then(() => {
+        alert('✅ Path copied to clipboard!\n\n' + location);
+    }).catch(() => {
+        prompt('Copy this path:', location);
+    });
 }
 
 // Test save functionality (for debugging)

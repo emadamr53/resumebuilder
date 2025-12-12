@@ -1435,7 +1435,7 @@ async function saveResumeToFile() {
     }
 }
 
-// Save resume to Downloads folder
+// Save resume to Downloads folder on MacBook
 function saveResumeToDownloads() {
     if (!currentUser) {
         alert('Please login first!');
@@ -1454,73 +1454,100 @@ function saveResumeToDownloads() {
             ...resume,
             exportedAt: new Date().toISOString(),
             exportedBy: currentUser.name || currentUser.username,
-            version: '1.0'
+            version: '1.0',
+            note: 'This file was saved to your MacBook Downloads folder'
         };
         
         const jsonContent = JSON.stringify(resumeData, null, 2);
         
-        // Create safe filename
+        // Create safe filename with timestamp
         const safeName = (resume.name || 'Resume').replace(/[^a-z0-9]/gi, '_').toLowerCase();
         const dateStr = new Date().toISOString().split('T')[0];
-        const fileName = `${safeName}_${dateStr}.json`;
+        const timeStr = new Date().toTimeString().split(' ')[0].replace(/:/g, '-');
+        const fileName = `RESUME_${safeName}_${dateStr}_${timeStr}.json`;
         
-        // Create and download file
+        // Create and download file - THIS SAVES TO YOUR MACBOOK!
         const blob = new Blob([jsonContent], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = fileName;
+        link.download = fileName; // This triggers download to MacBook
+        link.style.display = 'none';
         document.body.appendChild(link);
         link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
         
-        // Store file info for later access
+        // Wait a moment then remove
+        setTimeout(() => {
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }, 100);
+        
+        // Store file info
         const fileInfo = {
             fileName: fileName,
             filePath: '~/Downloads/' + fileName,
-            fullPath: '/Users/' + (navigator.userAgent.includes('Mac') ? 'amremad' : 'user') + '/Downloads/' + fileName,
-            savedAt: new Date().toISOString()
+            fullPath: '/Users/amremad/Downloads/' + fileName,
+            savedAt: new Date().toISOString(),
+            fileSize: jsonContent.length
         };
         localStorage.setItem('resumebuilder_last_saved_file', JSON.stringify(fileInfo));
+        
+        // Save to list of all saved files
+        const savedFiles = JSON.parse(localStorage.getItem('resumebuilder_saved_files_list') || '[]');
+        savedFiles.push(fileInfo);
+        localStorage.setItem('resumebuilder_saved_files_list', JSON.stringify(savedFiles));
         
         // Update file location display
         updateFileLocation(fileInfo);
         
-        // Show success message with detailed instructions
-        const message = `✅ RESUME SAVED SUCCESSFULLY!\n\n` +
-            `📄 File Name: ${fileName}\n` +
-            `📍 Location: ~/Downloads/${fileName}\n\n` +
-            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-            `🔍 TO FIND YOUR FILE:\n\n` +
-            `Method 1 (EASIEST):\n` +
-            `1. Open Finder\n` +
-            `2. Press ⌘ + Shift + D\n` +
-            `3. Look for: ${fileName}\n\n` +
-            `Method 2:\n` +
-            `1. Open Finder\n` +
-            `2. Click "Downloads" in sidebar\n` +
-            `3. Your file is there!\n\n` +
-            `Method 3:\n` +
-            `1. Press ⌘ + Space (Spotlight)\n` +
-            `2. Type: ${fileName}\n` +
-            `3. Press Enter\n\n` +
-            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-            `💡 TIP: The file is in your Downloads folder!\n` +
-            `You can also click "Show File Location" button\n` +
-            `in File Manager to see the exact path.`;
-        
-        alert(message);
-        
-        // Also log to console
-        console.log('✅ File saved:', fileName);
-        console.log('📍 Location: ~/Downloads/' + fileName);
-        console.log('🔍 To find: Open Finder → Press ⌘ + Shift + D');
+        // Show success with BIG CLEAR instructions
+        showFileSavedSuccess(fileName, fileInfo);
         
     } catch (error) {
         console.error('Error saving to Downloads:', error);
-        alert('❌ Error saving file: ' + error.message);
+        alert('❌ Error saving file: ' + error.message + '\n\nPlease try again or check your browser settings.');
     }
+}
+
+// Show file saved success message
+function showFileSavedSuccess(fileName, fileInfo) {
+    const message = `✅✅✅ FILE SAVED TO YOUR MACBOOK! ✅✅✅\n\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `📄 FILE NAME:\n${fileName}\n\n` +
+        `📍 EXACT LOCATION ON YOUR MACBOOK:\n` +
+        `/Users/amremad/Downloads/${fileName}\n\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `🔍 HOW TO FIND IT RIGHT NOW (3 EASY STEPS):\n\n` +
+        `STEP 1: Open Finder (click blue face icon in Dock)\n\n` +
+        `STEP 2: Press these 3 keys together:\n` +
+        `       ⌘ (Command) + Shift + D\n\n` +
+        `STEP 3: Downloads folder opens - YOUR FILE IS THERE!\n` +
+        `       Look for: ${fileName}\n\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `💡 OTHER WAYS TO FIND IT:\n\n` +
+        `• Click "Downloads" in Finder sidebar\n` +
+        `• Press ⌘ + Space, type: ${fileName}\n` +
+        `• Check browser Downloads (⌘ + Shift + J in Chrome)\n\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `✅ YOUR FILE IS ON YOUR MACBOOK - NOT ON GITHUB!\n` +
+        `✅ It's in your Downloads folder right now!\n` +
+        `✅ You can open it, move it, or share it!\n\n` +
+        `🕐 Saved at: ${new Date(fileInfo.savedAt).toLocaleString()}`;
+    
+    alert(message);
+    
+    // Also log detailed info
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('✅ FILE SAVED TO YOUR MACBOOK!');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('📄 File Name:', fileName);
+    console.log('📍 Location: ~/Downloads/' + fileName);
+    console.log('📍 Full Path: /Users/amremad/Downloads/' + fileName);
+    console.log('💾 File Size:', (fileInfo.fileSize / 1024).toFixed(2), 'KB');
+    console.log('🕐 Saved:', new Date(fileInfo.savedAt).toLocaleString());
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🔍 TO FIND: Open Finder → Press ⌘ + Shift + D');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 }
 
 // Open Downloads folder on Mac
@@ -1558,33 +1585,87 @@ function openDownloadsFolder() {
 // Show saved files location
 function showSavedFilesLocation() {
     const lastFile = JSON.parse(localStorage.getItem('resumebuilder_last_saved_file') || '{}');
+    const allFiles = JSON.parse(localStorage.getItem('resumebuilder_saved_files_list') || '[]');
     
-    if (!lastFile.fileName) {
-        alert('No files saved yet. Save a resume first!');
+    if (!lastFile.fileName && allFiles.length === 0) {
+        alert('❌ No files saved yet!\n\nPlease:\n1. Create a resume\n2. Click "Save to Downloads Folder"\n3. The file will download to your MacBook!');
         return;
     }
     
-    const message = `📁 YOUR SAVED RESUME FILES\n\n` +
-        `📍 Location on Your MacBook:\n` +
-        `~/Downloads/${lastFile.fileName}\n\n` +
-        `📂 Full Path:\n` +
-        `/Users/amremad/Downloads/${lastFile.fileName}\n\n` +
-        `🕐 Saved: ${new Date(lastFile.savedAt).toLocaleString()}\n\n` +
-        `💡 HOW TO FIND IT:\n` +
-        `1. Open Finder\n` +
-        `2. Press ⌘ + Shift + D (Opens Downloads)\n` +
-        `3. Look for: ${lastFile.fileName}\n\n` +
-        `Or:\n` +
-        `1. Press ⌘ + Shift + G in Finder\n` +
-        `2. Type: ~/Downloads\n` +
-        `3. Press Enter`;
+    let message = `📁 YOUR SAVED RESUME FILES ON YOUR MACBOOK\n\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `✅ IMPORTANT: Files are saved on YOUR MACBOOK, NOT on GitHub!\n` +
+        `✅ GitHub only hosts the web app code, not your data!\n\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+    
+    if (lastFile.fileName) {
+        message += `📄 LAST SAVED FILE:\n\n` +
+            `File Name: ${lastFile.fileName}\n` +
+            `📍 Location: ~/Downloads/${lastFile.fileName}\n` +
+            `📂 Full Path: /Users/amremad/Downloads/${lastFile.fileName}\n` +
+            `🕐 Saved: ${new Date(lastFile.savedAt).toLocaleString()}\n\n`;
+    }
+    
+    if (allFiles.length > 0) {
+        message += `📋 TOTAL FILES SAVED: ${allFiles.length}\n\n`;
+    }
+    
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `🔍 HOW TO FIND YOUR FILES (EASIEST WAY):\n\n` +
+        `STEP 1: Open Finder (blue face icon in Dock)\n\n` +
+        `STEP 2: Press these 3 keys together:\n` +
+        `       ⌘ (Command) + Shift + D\n\n` +
+        `STEP 3: Downloads folder opens!\n` +
+        `       Your files are there - look for .json files\n\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `💡 TIP: Sort by "Date Modified" to see newest first!`;
     
     alert(message);
     
-    // Also copy path to clipboard
-    const path = '~/Downloads/' + lastFile.fileName;
-    navigator.clipboard.writeText(path).then(() => {
-        console.log('Path copied to clipboard');
+    // Copy path to clipboard
+    if (lastFile.fileName) {
+        const path = '~/Downloads/' + lastFile.fileName;
+        navigator.clipboard.writeText(path).then(() => {
+            console.log('Path copied to clipboard:', path);
+        });
+    }
+}
+
+// List all saved files
+function listAllSavedFiles() {
+    const allFiles = JSON.parse(localStorage.getItem('resumebuilder_saved_files_list') || '[]');
+    
+    if (allFiles.length === 0) {
+        alert('No files saved yet!\n\nClick "Save to Downloads Folder" to save your resume to your MacBook.');
+        return;
+    }
+    
+    let message = `📋 ALL FILES SAVED ON YOUR MACBOOK\n\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `Total Files: ${allFiles.length}\n\n` +
+        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+    
+    // Sort by date (newest first)
+    allFiles.sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
+    
+    allFiles.forEach((file, index) => {
+        message += `${index + 1}. ${file.fileName}\n`;
+        message += `   📍 ~/Downloads/${file.fileName}\n`;
+        message += `   🕐 ${new Date(file.savedAt).toLocaleString()}\n\n`;
+    });
+    
+    message += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+        `🔍 TO FIND THESE FILES:\n` +
+        `1. Open Finder\n` +
+        `2. Press ⌘ + Shift + D\n` +
+        `3. All your .json files are there!`;
+    
+    alert(message);
+    
+    // Also log to console
+    console.log('📋 All saved files:', allFiles);
+    allFiles.forEach((file, index) => {
+        console.log(`${index + 1}. ${file.fileName} - ${file.filePath}`);
     });
 }
 
@@ -1713,25 +1794,35 @@ function copyFileLocation() {
 // Help user find their files
 function helpFindFiles() {
     const lastFile = JSON.parse(localStorage.getItem('resumebuilder_last_saved_file') || '{}');
+    const allFiles = JSON.parse(localStorage.getItem('resumebuilder_saved_files_list') || '[]');
     const resumes = getResumes();
     const hasResume = resumes && resumes.length > 0;
     
     let message = '🔍 LET\'S FIND YOUR FILES TOGETHER!\n\n';
-    message += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
+    message += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
+    message += '✅ IMPORTANT: Your files are saved on YOUR MACBOOK!\n';
+    message += '✅ NOT on GitHub - GitHub only has the web app code!\n';
+    message += '✅ Your data is safe on your computer!\n\n';
+    message += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
     
     if (lastFile.fileName) {
         message += '✅ I FOUND YOUR LAST SAVED FILE!\n\n';
         message += `📄 File Name: ${lastFile.fileName}\n`;
         message += `📍 Location: ~/Downloads/${lastFile.fileName}\n`;
+        message += `📂 Full Path: /Users/amremad/Downloads/${lastFile.fileName}\n`;
         message += `🕐 Saved: ${new Date(lastFile.savedAt).toLocaleString()}\n\n`;
-        message += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
+        message += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
+    }
+    
+    if (allFiles.length > 0) {
+        message += `📋 Total Files Saved: ${allFiles.length}\n\n`;
     }
     
     message += '📂 STEP-BY-STEP INSTRUCTIONS:\n\n';
     message += 'Method 1 (EASIEST - 3 steps):\n';
     message += '1. Open Finder (blue face icon in Dock)\n';
     message += '2. Press ⌘ + Shift + D\n';
-    message += '3. Look for: ' + (lastFile.fileName || 'resume_*.json files') + '\n\n';
+    message += '3. Look for: ' + (lastFile.fileName || 'RESUME_*.json files') + '\n\n';
     
     message += 'Method 2 (Using Sidebar):\n';
     message += '1. Open Finder\n';
@@ -1744,13 +1835,13 @@ function helpFindFiles() {
     message += '3. Type: .json\n';
     message += '4. All your resume files will appear!\n\n';
     
-    message += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
+    message += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
     
-    message += '💡 YOUR DATA IS SAFE!\n\n';
+    message += '💡 YOUR DATA IS SAFE IN 2 PLACES!\n\n';
     
     if (hasResume) {
-        message += '✅ Your resume data is saved in the browser!\n';
-        message += '✅ Even if you can\'t find the file, your data is safe!\n\n';
+        message += '✅ 1. In your Downloads folder (as .json files)\n';
+        message += '✅ 2. In your browser (localStorage)\n\n';
     }
     
     message += '🔧 STILL CAN\'T FIND IT?\n\n';
@@ -1760,8 +1851,8 @@ function helpFindFiles() {
     message += '   - Look at the Downloads list\n\n';
     
     message += '2. Search your entire Mac:\n';
-    message += '   - Press ⌘ + Space\n';
-    message += '   - Type: resume.json\n';
+    message += '   - Press ⌘ + Space (Spotlight)\n';
+    message += '   - Type: RESUME\n';
     message += '   - Press Enter\n\n';
     
     message += '3. Your data is ALSO in the browser:\n';
@@ -1769,15 +1860,18 @@ function helpFindFiles() {
     message += '   - Go to Application → Local Storage\n';
     message += '   - Your data is there!\n\n';
     
-    message += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
-    message += '😊 Don\'t worry! Your data is safe!\n';
-    message += 'We\'ll find it together! 💪';
+    message += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
+    message += '😊 Don\'t worry! Your files ARE on your MacBook!\n';
+    message += 'We\'ll find them together! 💪';
     
     alert(message);
     
-    // Also show in console for easy copy
-    console.log('=== FILE LOCATION HELP ===');
+    // Also show in console
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🔍 FILE LOCATION HELP');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('Last saved file:', lastFile);
+    console.log('All saved files:', allFiles.length);
     console.log('Downloads path: ~/Downloads/');
     console.log('Full path: /Users/amremad/Downloads/');
     if (lastFile.fileName) {
@@ -1788,6 +1882,7 @@ function helpFindFiles() {
     console.log('1. Open Finder');
     console.log('2. Press ⌘ + Shift + D');
     console.log('3. Or press ⌘ + Shift + G and type: ~/Downloads');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 }
 
 // Test save functionality (for debugging)

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Web App - Resume Builder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .test-section {
+            background: white;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-section h2 {
+            color: #667eea;
+            margin-top: 0;
+        }
+        .test-item {
+            padding: 10px;
+            margin: 10px 0;
+            border-left: 3px solid #667eea;
+            background: #f9f9f9;
+        }
+        .status {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        .status.ok { background: #00d26a; color: white; }
+        .status.error { background: #e74c3c; color: white; }
+        .status.warning { background: #f39c12; color: white; }
+        code {
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Resume Builder Web App - Test Checklist</h1>
+    
+    <div class="test-section">
+        <h2>📁 File Check</h2>
+        <div class="test-item">
+            <strong>index.html:</strong> 
+            <span id="check-index" class="status">Checking...</span>
+        </div>
+        <div class="test-item">
+            <strong>app.js:</strong> 
+            <span id="check-appjs" class="status">Checking...</span>
+        </div>
+        <div class="test-item">
+            <strong>styles.css:</strong> 
+            <span id="check-css" class="status">Checking...</span>
+        </div>
+        <div class="test-item">
+            <strong>manifest.json:</strong> 
+            <span id="check-manifest" class="status">Checking...</span>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🔧 Function Check</h2>
+        <div class="test-item">
+            <strong>handleSignup:</strong> 
+            <span id="check-signup" class="status">Checking...</span>
+        </div>
+        <div class="test-item">
+            <strong>handleLogin:</strong> 
+            <span id="check-login" class="status">Checking...</span>
+        </div>
+        <div class="test-item">
+            <strong>handleForgotPassword:</strong> 
+            <span id="check-forgot" class="status">Checking...</span>
+        </div>
+        <div class="test-item">
+            <strong>setupEventListeners:</strong> 
+            <span id="check-listeners" class="status">Checking...</span>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>🌐 GitHub Pages Test</h2>
+        <div class="test-item">
+            <strong>Live URL:</strong> 
+            <a href="https://emadamr53.github.io/resumebuilder/" target="_blank">
+                https://emadamr53.github.io/resumebuilder/
+            </a>
+        </div>
+        <div class="test-item">
+            <strong>Status:</strong> 
+            <span id="check-github" class="status">Checking...</span>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h2>✅ Manual Test Steps</h2>
+        <ol>
+            <li>Open <a href="https://emadamr53.github.io/resumebuilder/" target="_blank">GitHub Pages URL</a></li>
+            <li>Test Sign Up:
+                <ul>
+                    <li>Click "Sign Up"</li>
+                    <li>Fill in all fields</li>
+                    <li>Password must be 6+ characters</li>
+                    <li>Click "Sign Up" button</li>
+                    <li>Should see success message</li>
+                </ul>
+            </li>
+            <li>Test Login:
+                <ul>
+                    <li>Use the email/password you just created</li>
+                    <li>Click "Sign In"</li>
+                    <li>Should go to dashboard</li>
+                </ul>
+            </li>
+            <li>Test Forgot Password:
+                <ul>
+                    <li>Click "Forgot Password?"</li>
+                    <li>Enter your email</li>
+                    <li>Get reset code (shown in alert)</li>
+                    <li>Enter code and new password</li>
+                    <li>Should reset successfully</li>
+                </ul>
+            </li>
+            <li>Test Resume Creation:
+                <ul>
+                    <li>Click "Create Resume"</li>
+                    <li>Fill in resume details</li>
+                    <li>Click "Save Resume"</li>
+                    <li>Should save successfully</li>
+                </ul>
+            </li>
+        </ol>
+    </div>
+    
+    <script>
+        // Check files
+        function checkFile(filename, elementId) {
+            fetch(filename)
+                .then(response => {
+                    if (response.ok) {
+                        document.getElementById(elementId).textContent = '✅ Found';
+                        document.getElementById(elementId).className = 'status ok';
+                    } else {
+                        document.getElementById(elementId).textContent = '❌ Not Found';
+                        document.getElementById(elementId).className = 'status error';
+                    }
+                })
+                .catch(() => {
+                    document.getElementById(elementId).textContent = '⚠️ Error';
+                    document.getElementById(elementId).className = 'status warning';
+                });
+        }
+        
+        // Check functions in app.js
+        function checkFunction(functionName, elementId) {
+            fetch('app.js')
+                .then(response => response.text())
+                .then(content => {
+                    if (content.includes('function ' + functionName)) {
+                        document.getElementById(elementId).textContent = '✅ Found';
+                        document.getElementById(elementId).className = 'status ok';
+                    } else {
+                        document.getElementById(elementId).textContent = '❌ Not Found';
+                        document.getElementById(elementId).className = 'status error';
+                    }
+                })
+                .catch(() => {
+                    document.getElementById(elementId).textContent = '⚠️ Error';
+                    document.getElementById(elementId).className = 'status warning';
+                });
+        }
+        
+        // Check GitHub Pages
+        function checkGitHub() {
+            fetch('https://emadamr53.github.io/resumebuilder/', { mode: 'no-cors' })
+                .then(() => {
+                    document.getElementById('check-github').textContent = '✅ Accessible';
+                    document.getElementById('check-github').className = 'status ok';
+                })
+                .catch(() => {
+                    document.getElementById('check-github').textContent = '⚠️ Check manually';
+                    document.getElementById('check-github').className = 'status warning';
+                });
+        }
+        
+        // Run checks
+        checkFile('index.html', 'check-index');
+        checkFile('app.js', 'check-appjs');
+        checkFile('styles.css', 'check-css');
+        checkFile('manifest.json', 'check-manifest');
+        
+        checkFunction('handleSignup', 'check-signup');
+        checkFunction('handleLogin', 'check-login');
+        checkFunction('handleForgotPassword', 'check-forgot');
+        checkFunction('setupEventListeners', 'check-listeners');
+        
+        setTimeout(checkGitHub, 1000);
+    </script>
+</body>
+</html>
+

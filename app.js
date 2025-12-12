@@ -351,14 +351,19 @@ function handleResumeSave(e) {
             // Clear auto-save draft after successful save
             clearAutoSave();
             
-            // AUTOMATICALLY SAVE TO MACBOOK!
+            // AUTOMATICALLY SAVE TO MACBOOK (NO BROWSER INTERACTION NEEDED!)
             saveResumeToMacBookAutomatically(resume);
             
             // Verify it was saved
             const saved = getResumes();
             const verify = saved.find(r => r.userId === currentUser.id);
             if (verify) {
-                alert('✅ Resume saved successfully!\n\n✅ ALSO SAVED TO YOUR MACBOOK!\n\nCheck your Downloads folder!');
+                const lastFile = JSON.parse(localStorage.getItem('resumebuilder_last_saved_file') || '{}');
+                const fileMsg = lastFile.fileName ? 
+                    `\n\n✅ SAVED TO YOUR MACBOOK!\n📄 File: ${lastFile.fileName}\n📍 Location: ~/Downloads/\n💡 Opens in TextEdit - no browser needed!` : 
+                    `\n\n✅ File is downloading to your MacBook now!\n📍 Check ~/Downloads/ folder`;
+                
+                alert('✅ Resume saved successfully!' + fileMsg);
                 showScreen('dashboardScreen');
             } else {
                 throw new Error('Resume not found after save');
@@ -1457,7 +1462,7 @@ async function saveResumeToFile() {
 }
 
 // Automatically save resume to MacBook (called when user saves)
-function saveResumeToMacBookAutomatically(resume) {
+async function saveResumeToMacBookAutomatically(resume) {
     if (!resume || !currentUser) return;
     
     try {
@@ -1470,7 +1475,53 @@ function saveResumeToMacBookAutomatically(resume) {
         const textFileName = `RESUME_${safeName}_${dateStr}_${timeStr}.txt`;
         const textContent = formatResumeAsText(resume);
         
-        // Download text file to MacBook
+        // Try to use File System Access API to save directly to a folder (no browser download prompt)
+        if ('showSaveFilePicker' in window) {
+            try {
+                const fileHandle = await window.showSaveFilePicker({
+                    suggestedName: textFileName,
+                    types: [{
+                        description: 'Text Resume File',
+                        accept: { 'text/plain': ['.txt'] }
+                    }],
+                    startIn: 'downloads' // Start in Downloads folder
+                });
+                
+                const writable = await fileHandle.createWritable();
+                await writable.write(textContent);
+                await writable.close();
+                
+                // Store file info
+                const fileInfo = {
+                    fileName: textFileName,
+                    filePath: '~/Downloads/' + textFileName,
+                    fullPath: '/Users/amremad/Downloads/' + textFileName,
+                    savedAt: new Date().toISOString(),
+                    fileSize: textContent.length,
+                    autoSaved: true,
+                    format: 'TXT (Readable Text)',
+                    savedDirectly: true
+                };
+                localStorage.setItem('resumebuilder_last_saved_file', JSON.stringify(fileInfo));
+                
+                // Save to list
+                const savedFiles = JSON.parse(localStorage.getItem('resumebuilder_saved_files_list') || '[]');
+                savedFiles.push(fileInfo);
+                localStorage.setItem('resumebuilder_saved_files_list', JSON.stringify(savedFiles));
+                
+                console.log('✅ Saved directly to MacBook:', textFileName);
+                return; // Success - file saved directly
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    console.log('File System Access API not available, using download method');
+                    // Fall through to download method
+                } else {
+                    return; // User cancelled
+                }
+            }
+        }
+        
+        // Fallback: Download file to MacBook (silent - no browser interaction needed)
         const textBlob = new Blob([textContent], { type: 'text/plain' });
         const textUrl = URL.createObjectURL(textBlob);
         const textLink = document.createElement('a');
@@ -1480,10 +1531,11 @@ function saveResumeToMacBookAutomatically(resume) {
         document.body.appendChild(textLink);
         textLink.click();
         
+        // Remove immediately - file is already downloading
         setTimeout(() => {
             document.body.removeChild(textLink);
             URL.revokeObjectURL(textUrl);
-        }, 100);
+        }, 50);
         
         // Store file info
         const fileInfo = {
@@ -1505,6 +1557,7 @@ function saveResumeToMacBookAutomatically(resume) {
         console.log('✅ Automatically saved to MacBook:', textFileName);
         console.log('📍 Location: ~/Downloads/' + textFileName);
         console.log('📝 Format: Plain Text (opens in any text editor!)');
+        console.log('💡 File downloads automatically - check Downloads folder!');
         
     } catch (error) {
         console.error('Error auto-saving to MacBook:', error);

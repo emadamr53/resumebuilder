@@ -48,11 +48,18 @@ const themes = {
 
 // Initialize App
 document.addEventListener('DOMContentLoaded', () => {
-    loadThemeSettings();
-    checkAuth();
-    setupEventListeners();
-    initializePWA();
-    applyTheme();
+    try {
+        console.log('🚀 Resume Builder App Initializing...');
+        loadThemeSettings();
+        checkAuth();
+        setupEventListeners();
+        initializePWA();
+        applyTheme();
+        console.log('✅ Resume Builder App Initialized Successfully!');
+    } catch (error) {
+        console.error('❌ App initialization error:', error);
+        alert('Error initializing app. Please refresh the page.\nError: ' + error.message);
+    }
 });
 
 // Load theme settings from storage
@@ -75,31 +82,58 @@ function loadThemeSettings() {
 
 // Setup event listeners
 function setupEventListeners() {
-    // Login form
-    document.getElementById('loginForm').addEventListener('submit', handleLogin);
-    
-    // Signup form
-    document.getElementById('signupForm').addEventListener('submit', handleSignup);
-    
-    // Screen navigation
-    document.getElementById('showSignup').addEventListener('click', (e) => {
-        e.preventDefault();
-        showScreen('signupScreen');
-    });
-    
-    document.getElementById('showLogin').addEventListener('click', (e) => {
-        e.preventDefault();
-        showScreen('loginScreen');
-    });
-    
-    // Logout
-    document.getElementById('logoutBtn').addEventListener('click', handleLogout);
-    
-    // Theme toggle
-    document.getElementById('themeToggle').addEventListener('click', toggleDarkMode);
-    
-    // Resume form
-    document.getElementById('resumeForm').addEventListener('submit', handleResumeSave);
+    try {
+        // Login form
+        const loginForm = document.getElementById('loginForm');
+        if (loginForm) {
+            loginForm.addEventListener('submit', handleLogin);
+        }
+        
+        // Signup form
+        const signupForm = document.getElementById('signupForm');
+        if (signupForm) {
+            signupForm.addEventListener('submit', handleSignup);
+        } else {
+            console.error('Signup form not found!');
+        }
+        
+        // Screen navigation
+        const showSignupLink = document.getElementById('showSignup');
+        if (showSignupLink) {
+            showSignupLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                showScreen('signupScreen');
+            });
+        }
+        
+        const showLoginLink = document.getElementById('showLogin');
+        if (showLoginLink) {
+            showLoginLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                showScreen('loginScreen');
+            });
+        }
+        
+        // Logout
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', handleLogout);
+        }
+        
+        // Theme toggle
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', toggleDarkMode);
+        }
+        
+        // Resume form
+        const resumeForm = document.getElementById('resumeForm');
+        if (resumeForm) {
+            resumeForm.addEventListener('submit', handleResumeSave);
+        }
+    } catch (error) {
+        console.error('Error setting up event listeners:', error);
+    }
 }
 
 // Show screen
@@ -124,59 +158,105 @@ function showScreen(screenId) {
 // Handle login
 function handleLogin(e) {
     e.preventDefault();
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
     
-    const users = getUsers();
-    const user = users.find(u => u.email === email && u.password === password);
-    
-    if (user) {
-        currentUser = user;
-        localStorage.setItem(STORAGE_KEY_CURRENT_USER, JSON.stringify(user));
-        showScreen('dashboardScreen');
-        updateWelcomeText();
-    } else {
-        alert('Invalid email or password!');
+    try {
+        const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+        const password = document.getElementById('loginPassword').value;
+        
+        if (!email || !password) {
+            alert('Please enter both email and password!');
+            return;
+        }
+        
+        const users = getUsers();
+        const user = users.find(u => 
+            u.email && u.email.toLowerCase() === email && u.password === password
+        );
+        
+        if (user) {
+            currentUser = user;
+            localStorage.setItem(STORAGE_KEY_CURRENT_USER, JSON.stringify(user));
+            showScreen('dashboardScreen');
+            updateWelcomeText();
+            
+            // Clear login form
+            document.getElementById('loginForm').reset();
+        } else {
+            alert('❌ Invalid email or password! Please check your credentials or sign up for a new account.');
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        alert('An error occurred during login. Please try again.\nError: ' + error.message);
     }
 }
 
 // Handle signup
 function handleSignup(e) {
     e.preventDefault();
-    const name = document.getElementById('signupName').value;
-    const username = document.getElementById('signupUsername').value;
-    const email = document.getElementById('signupEmail').value;
-    const password = document.getElementById('signupPassword').value;
     
-    const users = getUsers();
-    
-    if (users.find(u => u.email === email)) {
-        alert('Email already exists!');
-        return;
+    try {
+        const name = document.getElementById('signupName').value.trim();
+        const username = document.getElementById('signupUsername').value.trim();
+        const email = document.getElementById('signupEmail').value.trim();
+        const password = document.getElementById('signupPassword').value;
+        
+        // Validation
+        if (!name || !username || !email || !password) {
+            alert('Please fill in all fields!');
+            return;
+        }
+        
+        if (password.length < 6) {
+            alert('Password must be at least 6 characters long!');
+            return;
+        }
+        
+        const users = getUsers();
+        
+        // Check if email already exists
+        if (users.find(u => u.email && u.email.toLowerCase() === email.toLowerCase())) {
+            alert('Email already exists! Please use a different email.');
+            return;
+        }
+        
+        // Check if username already exists
+        if (users.find(u => u.username && u.username.toLowerCase() === username.toLowerCase())) {
+            alert('Username already taken! Please choose a different username.');
+            return;
+        }
+        
+        // Create new user
+        const newUser = {
+            id: Date.now(),
+            name: name,
+            username: username,
+            email: email.toLowerCase(),
+            password: password,
+            createdAt: new Date().toISOString()
+        };
+        
+        // Save to storage
+        users.push(newUser);
+        localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(users));
+        
+        // Set as current user
+        currentUser = newUser;
+        localStorage.setItem(STORAGE_KEY_CURRENT_USER, JSON.stringify(newUser));
+        
+        // Show success message
+        alert('✅ Account created successfully! Welcome, ' + name + '!');
+        
+        // Navigate to dashboard
+        showScreen('dashboardScreen');
+        updateWelcomeText();
+        
+        // Clear signup form
+        document.getElementById('signupForm').reset();
+        
+    } catch (error) {
+        console.error('Signup error:', error);
+        alert('An error occurred during signup. Please try again.\nError: ' + error.message);
     }
-    
-    if (users.find(u => u.username === username)) {
-        alert('Username already taken!');
-        return;
-    }
-    
-    const newUser = {
-        id: Date.now(),
-        name,
-        username,
-        email,
-        password
-    };
-    
-    users.push(newUser);
-    localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(users));
-    
-    currentUser = newUser;
-    localStorage.setItem(STORAGE_KEY_CURRENT_USER, JSON.stringify(newUser));
-    
-    showScreen('dashboardScreen');
-    updateWelcomeText();
-    alert('Account created successfully!');
 }
 
 // Handle logout

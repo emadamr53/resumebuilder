@@ -1410,3 +1410,48 @@ function testSave() {
         alert('❌ localStorage is not working!\n\nError: ' + error.message + '\n\nPlease check your browser settings.');
     }
 }
+
+// View where data is stored
+function viewDataStorage() {
+    if (!currentUser) {
+        alert('Please login first!');
+        return;
+    }
+    
+    const users = getUsers();
+    const resumes = getResumes();
+    const userResume = resumes.find(r => r.userId === currentUser.id);
+    const autoSave = loadAutoSave();
+    
+    let message = '📦 DATA STORAGE LOCATION\n\n';
+    message += 'All data is saved in your browser\'s localStorage.\n\n';
+    message += '📍 Storage Location:\n';
+    message += 'Browser → Local Storage → ' + window.location.origin + '\n\n';
+    message += '📊 Your Data:\n';
+    message += `• Users: ${users.length}\n`;
+    message += `• Resumes: ${resumes.length}\n`;
+    message += `• Your Resume: ${userResume ? '✅ Saved' : '❌ Not saved'}\n`;
+    message += `• Auto-save Draft: ${autoSave ? '✅ Exists' : '❌ None'}\n\n`;
+    message += '🔍 How to View:\n';
+    message += '1. Press F12 (Developer Tools)\n';
+    message += '2. Go to "Application" tab\n';
+    message += '3. Click "Local Storage"\n';
+    message += '4. Click your website URL\n\n';
+    message += '💡 Storage Keys:\n';
+    message += '• resumebuilder_users\n';
+    message += '• resumebuilder_resumes\n';
+    message += '• resumebuilder_autosave_' + currentUser.id + '\n';
+    
+    alert(message);
+    
+    // Also log to console
+    console.log('=== DATA STORAGE INFO ===');
+    console.log('Storage Location: Browser localStorage');
+    console.log('Website:', window.location.origin);
+    console.log('Users:', users);
+    console.log('Resumes:', resumes);
+    console.log('Your Resume:', userResume);
+    console.log('Auto-save Draft:', autoSave);
+    console.log('\nTo view in browser:');
+    console.log('F12 → Application → Local Storage →', window.location.origin);
+}

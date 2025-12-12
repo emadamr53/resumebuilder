@@ -6,6 +6,7 @@ const STORAGE_KEY_CURRENT_USER = 'resumebuilder_current_user';
 const STORAGE_KEY_RESUMES = 'resumebuilder_resumes';
 const STORAGE_KEY_THEME = 'resumebuilder_theme';
 const STORAGE_KEY_DARK_MODE = 'resumebuilder_dark_mode';
+const STORAGE_KEY_AUTOSAVE = 'resumebuilder_autosave';
 
 // App State
 let currentUser = null;
@@ -13,6 +14,8 @@ let currentResume = null;
 let currentTheme = 'professional';
 let isDarkMode = true;
 let selectedThemeForPreview = 'professional';
+let autoSaveTimer = null;
+let autoSaveStatus = null; // 'saving', 'saved', null
 
 // Theme configurations
 const themes = {
@@ -128,6 +131,9 @@ function setupEventListeners() {
     
     // Resume form
     document.getElementById('resumeForm').addEventListener('submit', handleResumeSave);
+    
+    // Setup auto-save listeners (will be attached when form loads)
+    setupAutoSave();
 }
 
 // Show screen
@@ -340,6 +346,9 @@ function handleResumeSave(e) {
             currentResume = resume;
             console.log('Resume saved to localStorage successfully');
             
+            // Clear auto-save draft after successful save
+            clearAutoSave();
+            
             // Verify it was saved
             const saved = getResumes();
             const verify = saved.find(r => r.userId === currentUser.id);
@@ -356,6 +365,156 @@ function handleResumeSave(e) {
     } catch (error) {
         console.error('Error saving resume:', error);
         alert('❌ Error saving resume: ' + error.message);
+    }
+}
+
+// ==================== AUTO-SAVE FUNCTIONALITY ====================
+
+// Setup auto-save system
+function setupAutoSave() {
+    // Auto-save will be set up when form loads
+    console.log('Auto-save system initialized');
+}
+
+// Setup auto-save listeners on form inputs
+function setupAutoSaveListeners() {
+    if (!currentUser) return;
+    
+    // Remove existing listeners to avoid duplicates
+    const form = document.getElementById('resumeForm');
+    if (!form) return;
+    
+    // Get all form inputs
+    const inputs = form.querySelectorAll('input, textarea');
+    const expItems = document.querySelectorAll('.exp-item input, .exp-item textarea');
+    const eduItems = document.querySelectorAll('.edu-item input, .edu-item textarea');
+    
+    // Combine all inputs
+    const allInputs = [...inputs, ...expItems, ...eduItems];
+    
+    // Add auto-save listener to each input
+    allInputs.forEach(input => {
+        // Remove existing listeners
+        input.removeEventListener('input', triggerAutoSave);
+        // Add new listener
+        input.addEventListener('input', triggerAutoSave);
+    });
+    
+    console.log('Auto-save listeners attached to', allInputs.length, 'inputs');
+}
+
+// Trigger auto-save (debounced)
+function triggerAutoSave() {
+    if (!currentUser) return;
+    
+    // Clear existing timer
+    if (autoSaveTimer) {
+        clearTimeout(autoSaveTimer);
+    }
+    
+    // Show "Saving..." status
+    showAutoSaveStatus('saving', 'Saving...');
+    
+    // Set new timer (save after 2 seconds of no typing)
+    autoSaveTimer = setTimeout(() => {
+        performAutoSave();
+    }, 2000);
+}
+
+// Perform the actual auto-save
+function performAutoSave() {
+    if (!currentUser) return;
+    
+    try {
+        // Get form data
+        const resumeData = {
+            userId: currentUser.id,
+            name: document.getElementById('resumeName')?.value.trim() || '',
+            email: document.getElementById('resumeEmail')?.value.trim() || '',
+            phone: document.getElementById('resumePhone')?.value.trim() || '',
+            address: document.getElementById('resumeAddress')?.value.trim() || '',
+            skills: document.getElementById('resumeSkills')?.value.split(',').map(s => s.trim()).filter(s => s) || [],
+            experiences: getExperiences(),
+            education: getEducation(),
+            autoSavedAt: new Date().toISOString()
+        };
+        
+        // Save to localStorage
+        localStorage.setItem(STORAGE_KEY_AUTOSAVE + '_' + currentUser.id, JSON.stringify(resumeData));
+        
+        console.log('Auto-saved resume draft');
+        showAutoSaveStatus('saved', 'Draft saved');
+        
+        // Clear status after 3 seconds
+        setTimeout(() => {
+            if (autoSaveStatus === 'saved') {
+                showAutoSaveStatus(null, '');
+            }
+        }, 3000);
+        
+    } catch (error) {
+        console.error('Auto-save error:', error);
+        showAutoSaveStatus('error', 'Save failed');
+    }
+}
+
+// Load auto-saved draft
+function loadAutoSave() {
+    if (!currentUser) return null;
+    
+    try {
+        const autoSaveStr = localStorage.getItem(STORAGE_KEY_AUTOSAVE + '_' + currentUser.id);
+        if (autoSaveStr) {
+            const autoSaved = JSON.parse(autoSaveStr);
+            console.log('Auto-saved draft found:', autoSaved);
+            return autoSaved;
+        }
+    } catch (error) {
+        console.error('Error loading auto-save:', error);
+    }
+    
+    return null;
+}
+
+// Clear auto-save draft
+function clearAutoSave() {
+    if (!currentUser) return;
+    
+    try {
+        localStorage.removeItem(STORAGE_KEY_AUTOSAVE + '_' + currentUser.id);
+        console.log('Auto-save draft cleared');
+        showAutoSaveStatus(null, '');
+    } catch (error) {
+        console.error('Error clearing auto-save:', error);
+    }
+}
+
+// Show auto-save status
+function showAutoSaveStatus(status, message) {
+    autoSaveStatus = status;
+    const statusEl = document.getElementById('autoSaveStatus');
+    if (!statusEl) return;
+    
+    statusEl.className = 'auto-save-status';
+    
+    if (status === 'saving') {
+        statusEl.className += ' saving';
+        statusEl.textContent = '💾 Saving...';
+    } else if (status === 'saved') {
+        statusEl.className += ' saved';
+        statusEl.textContent = '✅ Saved';
+    } else if (status === 'restored') {
+        statusEl.className += ' restored';
+        statusEl.textContent = '📋 ' + message;
+        setTimeout(() => {
+            statusEl.textContent = '';
+            statusEl.className = 'auto-save-status';
+        }, 3000);
+    } else if (status === 'error') {
+        statusEl.className += ' error';
+        statusEl.textContent = '❌ ' + message;
+    } else {
+        statusEl.textContent = '';
     }
 }
 
@@ -402,9 +561,17 @@ function addExperience() {
         <input type="text" data-field="startDate" placeholder="Start Date (e.g., Jan 2020)">
         <input type="text" data-field="endDate" placeholder="End Date (e.g., Present)">
         <textarea data-field="description" placeholder="Job Description"></textarea>
-        <button type="button" class="remove-btn" onclick="this.parentElement.remove()">Remove</button>
+        <button type="button" class="remove-btn" onclick="this.parentElement.remove(); triggerAutoSave();">Remove</button>
     `;
     container.appendChild(item);
+    
+    // Add auto-save listeners to new inputs
+    item.querySelectorAll('input, textarea').forEach(input => {
+        input.addEventListener('input', triggerAutoSave);
+    });
+    
+    // Trigger auto-save after adding
+    triggerAutoSave();
 }
 
 // Add education field
@@ -418,9 +585,17 @@ function addEducation() {
         <input type="text" data-field="field" placeholder="Field of Study">
         <input type="text" data-field="year" placeholder="Graduation Year">
         <input type="text" data-field="gpa" placeholder="GPA (optional)">
-        <button type="button" class="remove-btn" onclick="this.parentElement.remove()">Remove</button>
+        <button type="button" class="remove-btn" onclick="this.parentElement.remove(); triggerAutoSave();">Remove</button>
     `;
     container.appendChild(item);
+    
+    // Add auto-save listeners to new inputs
+    item.querySelectorAll('input, textarea').forEach(input => {
+        input.addEventListener('input', triggerAutoSave);
+    });
+    
+    // Trigger auto-save after adding
+    triggerAutoSave();
 }
 
 // Load resume form

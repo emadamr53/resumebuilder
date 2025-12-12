@@ -68,3 +68,4 @@ If the site still doesn't work:
 3. Verify all files are pushed to GitHub
 4. Wait 5-10 minutes after enabling Pages (deployment takes time)
 
+

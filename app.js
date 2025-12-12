@@ -149,6 +149,13 @@ function showScreen(screenId) {
     } else if (screenId === 'publicResumeScreen') {
         // Public resume page is handled by showPublicResumePage
     }
+    
+    // Debug: Log current state
+    if (currentUser) {
+        console.log('Current user:', currentUser);
+        const resume = getCurrentResume();
+        console.log('Current resume:', resume);
+    }
 }
 
 // Handle login
@@ -276,32 +283,80 @@ function getUsers() {
 function handleResumeSave(e) {
     e.preventDefault();
     
-    const resume = {
-        id: Date.now(),
-        userId: currentUser.id,
-        name: document.getElementById('resumeName').value,
-        email: document.getElementById('resumeEmail').value,
-        phone: document.getElementById('resumePhone').value,
-        address: document.getElementById('resumeAddress').value,
-        skills: document.getElementById('resumeSkills').value.split(',').map(s => s.trim()).filter(s => s),
-        experiences: getExperiences(),
-        education: getEducation()
-    };
-    
-    const resumes = getResumes();
-    const existingIndex = resumes.findIndex(r => r.userId === currentUser.id);
-    
-    if (existingIndex >= 0) {
-        resumes[existingIndex] = resume;
-    } else {
-        resumes.push(resume);
+    // Check if user is logged in
+    if (!currentUser) {
+        alert('Please login first to save your resume!');
+        showScreen('loginScreen');
+        return;
     }
     
-    localStorage.setItem(STORAGE_KEY_RESUMES, JSON.stringify(resumes));
-    currentResume = resume;
+    // Validate required fields
+    const name = document.getElementById('resumeName').value.trim();
+    const email = document.getElementById('resumeEmail').value.trim();
+    const phone = document.getElementById('resumePhone').value.trim();
     
-    alert('Resume saved successfully!');
-    showScreen('dashboardScreen');
+    if (!name || !email) {
+        alert('Please fill in at least your name and email!');
+        return;
+    }
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+        alert('Please enter a valid email address!');
+        return;
+    }
+    
+    try {
+        const resume = {
+            id: Date.now(),
+            userId: currentUser.id,
+            name: name,
+            email: email,
+            phone: phone,
+            address: document.getElementById('resumeAddress').value.trim(),
+            skills: document.getElementById('resumeSkills').value.split(',').map(s => s.trim()).filter(s => s),
+            experiences: getExperiences(),
+            education: getEducation(),
+            lastUpdated: new Date().toISOString()
+        };
+        
+        const resumes = getResumes();
+        const existingIndex = resumes.findIndex(r => r.userId === currentUser.id);
+        
+        if (existingIndex >= 0) {
+            // Keep the original ID when updating
+            resume.id = resumes[existingIndex].id;
+            resumes[existingIndex] = resume;
+            console.log('Resume updated:', resume);
+        } else {
+            resumes.push(resume);
+            console.log('Resume created:', resume);
+        }
+        
+        // Save to localStorage
+        try {
+            localStorage.setItem(STORAGE_KEY_RESUMES, JSON.stringify(resumes));
+            currentResume = resume;
+            console.log('Resume saved to localStorage successfully');
+            
+            // Verify it was saved
+            const saved = getResumes();
+            const verify = saved.find(r => r.userId === currentUser.id);
+            if (verify) {
+                alert('✅ Resume saved successfully!\n\nYou can now preview or export your resume.');
+                showScreen('dashboardScreen');
+            } else {
+                throw new Error('Resume not found after save');
+            }
+        } catch (storageError) {
+            console.error('localStorage error:', storageError);
+            alert('⚠️ Error saving resume. Your browser may be blocking localStorage.\n\nPlease:\n1. Check browser settings\n2. Try a different browser\n3. Make sure you\'re not in private/incognito mode');
+        }
+    } catch (error) {
+        console.error('Error saving resume:', error);
+        alert('❌ Error saving resume: ' + error.message);
+    }
 }
 
 // Get experiences from form
@@ -370,8 +425,17 @@ function addEducation() {
 
 // Load resume form
 function loadResumeForm() {
+    console.log('loadResumeForm: Loading form...');
+    
+    if (!currentUser) {
+        alert('Please login first!');
+        showScreen('loginScreen');
+        return;
+    }
+    
     const resume = getCurrentResume();
     if (resume) {
+        console.log('loadResumeForm: Loading existing resume data');
         document.getElementById('resumeName').value = resume.name || '';
         document.getElementById('resumeEmail').value = resume.email || '';
         document.getElementById('resumePhone').value = resume.phone || '';
@@ -428,13 +492,30 @@ function escapeHtml(text) {
 
 // Load resume preview
 function loadResumePreview() {
+    console.log('loadResumePreview: Loading preview...');
+    
+    if (!currentUser) {
+        console.log('loadResumePreview: No user logged in');
+        const preview = document.getElementById('resumePreview');
+        preview.innerHTML = '<p class="empty-state">Please login first to view your resume!</p>';
+        return;
+    }
+    
     const resume = getCurrentResume();
     const preview = document.getElementById('resumePreview');
     
     if (!resume) {
-        preview.innerHTML = '<p class="empty-state">No resume data available. Create a resume first!</p>';
+        console.log('loadResumePreview: No resume found');
+        preview.innerHTML = `
+            <p class="empty-state">No resume data available. Create a resume first!</p>
+            <button onclick="showScreen('resumeFormScreen')" class="btn btn-primary" style="margin-top: 20px; max-width: 300px;">
+                Create Resume Now
+            </button>
+        `;
         return;
     }
+    
+    console.log('loadResumePreview: Loading resume:', resume);
     
     const theme = themes[selectedThemeForPreview] || themes.professional;
     
@@ -505,15 +586,35 @@ function loadResumePreview() {
 
 // Get current user's resume
 function getCurrentResume() {
-    if (!currentUser) return null;
+    if (!currentUser) {
+        console.log('getCurrentResume: No current user');
+        return null;
+    }
     const resumes = getResumes();
-    return resumes.find(r => r.userId === currentUser.id) || null;
+    const resume = resumes.find(r => r.userId === currentUser.id) || null;
+    if (resume) {
+        console.log('getCurrentResume: Found resume for user', currentUser.id, resume);
+    } else {
+        console.log('getCurrentResume: No resume found for user', currentUser.id);
+    }
+    return resume;
 }
 
 // Get resumes from storage
 function getResumes() {
-    const resumesStr = localStorage.getItem(STORAGE_KEY_RESUMES);
-    return resumesStr ? JSON.parse(resumesStr) : [];
+    try {
+        const resumesStr = localStorage.getItem(STORAGE_KEY_RESUMES);
+        if (!resumesStr) {
+            console.log('getResumes: No resumes in storage');
+            return [];
+        }
+        const resumes = JSON.parse(resumesStr);
+        console.log('getResumes: Found', resumes.length, 'resume(s)');
+        return resumes;
+    } catch (error) {
+        console.error('getResumes: Error parsing resumes:', error);
+        return [];
+    }
 }
 
 // Check authentication
@@ -1092,5 +1193,45 @@ function sharePublicResume() {
         }).catch(() => {
             prompt('Copy this URL to share your resume:', url);
         });
+    }
+}
+
+// Test save functionality (for debugging)
+function testSave() {
+    console.log('=== TEST SAVE ===');
+    console.log('Current user:', currentUser);
+    console.log('localStorage available:', typeof(Storage) !== "undefined");
+    
+    if (!currentUser) {
+        alert('❌ No user logged in!\n\nPlease login first.');
+        return;
+    }
+    
+    // Check if we can read/write localStorage
+    try {
+        const testKey = 'resumebuilder_test';
+        localStorage.setItem(testKey, 'test');
+        const testValue = localStorage.getItem(testKey);
+        localStorage.removeItem(testKey);
+        
+        if (testValue !== 'test') {
+            throw new Error('localStorage write/read test failed');
+        }
+        
+        console.log('✅ localStorage is working');
+        
+        // Check existing resumes
+        const resumes = getResumes();
+        console.log('Existing resumes:', resumes);
+        const userResume = resumes.find(r => r.userId === currentUser.id);
+        
+        if (userResume) {
+            alert(`✅ Resume found!\n\nName: ${userResume.name}\nEmail: ${userResume.email}\n\nYou can preview it now.`);
+        } else {
+            alert('ℹ️ No resume saved yet.\n\nFill in the form and click "Save Resume" to create one.');
+        }
+    } catch (error) {
+        console.error('localStorage test failed:', error);
+        alert('❌ localStorage is not working!\n\nError: ' + error.message + '\n\nPlease check your browser settings.');
     }
 }

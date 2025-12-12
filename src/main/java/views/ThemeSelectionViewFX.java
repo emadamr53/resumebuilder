@@ -64,9 +64,9 @@ public class ThemeSelectionViewFX {
         bar.setStyle("-fx-background-color: #1a1a2e;");
         
         Button backBtn = new Button("← Back");
-        backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 14px; -fx-cursor: hand;");
-        backBtn.setOnMouseEntered(e -> backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 14px; -fx-cursor: hand;"));
-        backBtn.setOnMouseExited(e -> backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 14px; -fx-cursor: hand;"));
+        backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 14px; ");
+        backBtn.setOnMouseEntered(e -> backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 14px; "));
+        backBtn.setOnMouseExited(e -> backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 14px; "));
         backBtn.setOnAction(e -> {
             new MainViewFX().show();
             stage.close();
@@ -82,13 +82,13 @@ public class ThemeSelectionViewFX {
         HBox.setHgrow(spacer2, Priority.ALWAYS);
         
         Button closeBtn = new Button("✕");
-        closeBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 16px; -fx-cursor: hand;");
+        closeBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 16px; ");
         closeBtn.setOnAction(e -> {
             new MainViewFX().show();
             stage.close();
         });
-        closeBtn.setOnMouseEntered(e -> closeBtn.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-size: 16px; -fx-cursor: hand; -fx-background-radius: 3;"));
-        closeBtn.setOnMouseExited(e -> closeBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 16px; -fx-cursor: hand;"));
+        closeBtn.setOnMouseEntered(e -> closeBtn.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-size: 16px;  -fx-background-radius: 3;"));
+        closeBtn.setOnMouseExited(e -> closeBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 16px; "));
         
         bar.getChildren().addAll(backBtn, spacer1, title, spacer2, closeBtn);
         return bar;
@@ -128,9 +128,9 @@ public class ThemeSelectionViewFX {
             "-fx-text-fill: white; " +
             "-fx-font-size: 16px; " +
             "-fx-font-weight: bold; " +
-            "-fx-cursor: hand; " +
             "-fx-background-radius: 25; " +
-            "-fx-padding: 15 40;"
+                                    
+                                                                                                                                                            "-fx-padding: 15 40;"
         );
         customizeBtn.setOnAction(e -> {
             ThemeManager.setSelectedTheme(selectedTheme);
@@ -146,9 +146,9 @@ public class ThemeSelectionViewFX {
             "-fx-text-fill: white; " +
             "-fx-font-size: 16px; " +
             "-fx-font-weight: bold; " +
-            "-fx-cursor: hand; " +
             "-fx-background-radius: 25; " +
-            "-fx-padding: 15 40;"
+                                    
+                                                                                                                                                            "-fx-padding: 15 40;"
         );
         applyBtn.setOnAction(e -> {
             ThemeManager.setSelectedTheme(selectedTheme);
@@ -161,18 +161,18 @@ public class ThemeSelectionViewFX {
             "-fx-text-fill: white; " +
             "-fx-font-size: 16px; " +
             "-fx-font-weight: bold; " +
-            "-fx-cursor: hand; " +
             "-fx-background-radius: 25; " +
-            "-fx-padding: 15 40;"
+                        
+                                                            "-fx-padding: 15 40;"
         ));
         applyBtn.setOnMouseExited(e -> applyBtn.setStyle(
             "-fx-background-color: #667eea; " +
             "-fx-text-fill: white; " +
             "-fx-font-size: 16px; " +
             "-fx-font-weight: bold; " +
-            "-fx-cursor: hand; " +
             "-fx-background-radius: 25; " +
-            "-fx-padding: 15 40;"
+                                    
+                                                                                                                                                            "-fx-padding: 15 40;"
         ));
         
         HBox buttonBox = new HBox(15);
@@ -193,15 +193,13 @@ public class ThemeSelectionViewFX {
         boolean isSelected = theme == selectedTheme;
         String bgColor = isSelected ? "#667eea" : "#1a1a2e";
         String borderColor = isSelected ? "#764ba2" : "#2a2a3e";
-        
+                        
         card.setStyle(
             "-fx-background-color: " + bgColor + "; " +
             "-fx-background-radius: 20; " +
             "-fx-border-color: " + borderColor + "; " +
             "-fx-border-radius: 20; " +
-            "-fx-border-width: 2; " +
-            "-fx-cursor: hand;"
-        );
+            "-fx-border-width: 2;");
         
         // Theme icon/color preview
         Rectangle colorPreview = new Rectangle(80, 80);
@@ -244,9 +242,8 @@ public class ThemeSelectionViewFX {
                     "-fx-background-radius: 20; " +
                     "-fx-border-color: #667eea; " +
                     "-fx-border-radius: 20; " +
-                    "-fx-border-width: 2; " +
-                    "-fx-cursor: hand;"
-                );
+                                    
+                                                            "-fx-border-width: 2;");
             }
         });
         
@@ -257,9 +254,8 @@ public class ThemeSelectionViewFX {
                     "-fx-background-radius: 20; " +
                     "-fx-border-color: #2a2a3e; " +
                     "-fx-border-radius: 20; " +
-                    "-fx-border-width: 2; " +
-                    "-fx-cursor: hand;"
-                );
+                                    
+                                                            "-fx-border-width: 2;");
             }
         });
         

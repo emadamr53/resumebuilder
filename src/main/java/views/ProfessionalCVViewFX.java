@@ -91,9 +91,9 @@ public class ProfessionalCVViewFX {
         bar.setStyle("-fx-background-color: #1a1a2e;");
         
         Button backBtn = new Button("← Back");
-        backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 14px; -fx-cursor: hand;");
-        backBtn.setOnMouseEntered(e -> backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 14px; -fx-cursor: hand;"));
-        backBtn.setOnMouseExited(e -> backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 14px; -fx-cursor: hand;"));
+        backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 14px; ");
+        backBtn.setOnMouseEntered(e -> backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 14px; "));
+        backBtn.setOnMouseExited(e -> backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 14px; "));
         backBtn.setOnAction(e -> {
             new MainViewFX().show();
             stage.close();
@@ -113,7 +113,6 @@ public class ProfessionalCVViewFX {
             "-fx-background-color: #11998e; " +
             "-fx-text-fill: white; " +
             "-fx-font-size: 13px; " +
-            "-fx-cursor: hand; " +
             "-fx-background-radius: 15; " +
             "-fx-padding: 8 20;"
         );
@@ -127,20 +126,19 @@ public class ProfessionalCVViewFX {
             "-fx-background-color: #667eea; " +
             "-fx-text-fill: white; " +
             "-fx-font-size: 13px; " +
-            "-fx-cursor: hand; " +
             "-fx-background-radius: 15; " +
             "-fx-padding: 8 20;"
         );
         printBtn.setOnAction(e -> handlePrint());
         
         Button closeBtn = new Button("✕");
-        closeBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 16px; -fx-cursor: hand;");
+        closeBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 16px; ");
         closeBtn.setOnAction(e -> {
             new MainViewFX().show();
             stage.close();
         });
-        closeBtn.setOnMouseEntered(e -> closeBtn.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-size: 16px; -fx-cursor: hand; -fx-background-radius: 3;"));
-        closeBtn.setOnMouseExited(e -> closeBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 16px; -fx-cursor: hand;"));
+        closeBtn.setOnMouseEntered(e -> closeBtn.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-size: 16px;  -fx-background-radius: 3;"));
+        closeBtn.setOnMouseExited(e -> closeBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 16px; "));
         
         HBox rightBox = new HBox(15, themeBtn, printBtn, closeBtn);
         rightBox.setAlignment(Pos.CENTER_RIGHT);
@@ -169,7 +167,8 @@ public class ProfessionalCVViewFX {
         paper.setMaxHeight(javafx.scene.layout.Region.USE_PREF_SIZE);
         paper.setStyle(
             "-fx-background-color: " + themeSettings.getBackgroundColor() + "; " +
-            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 20, 0, 0, 5);"
+            
+                                                            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 20, 0, 0, 5);"
         );
         paper.setPadding(new Insets(themeSettings.getPadding(), themeSettings.getPadding() + 10, themeSettings.getPadding(), themeSettings.getPadding() + 10));
         
@@ -192,6 +191,7 @@ public class ProfessionalCVViewFX {
             
             if (resume.getEmail() != null && !resume.getEmail().isEmpty()) {
                 String emailPrefix = themeSettings.isUseIcons() ? "✉ " : "";
+                        
                 Text emailText = new Text(emailPrefix + resume.getEmail());
                 emailText.setFont(Font.font(themeSettings.getBodyFont(), themeSettings.getBodyFontSize()));
                 emailText.setFill(Color.web(themeSettings.getBodyTextColor()));
@@ -199,6 +199,7 @@ public class ProfessionalCVViewFX {
             }
             if (resume.getPhone() != null && !resume.getPhone().isEmpty()) {
                 String phonePrefix = themeSettings.isUseIcons() ? "📱 " : "";
+                                    
                 Text phoneText = new Text(phonePrefix + resume.getPhone());
                 phoneText.setFont(Font.font(themeSettings.getBodyFont(), themeSettings.getBodyFontSize()));
                 phoneText.setFill(Color.web(themeSettings.getBodyTextColor()));
@@ -206,6 +207,7 @@ public class ProfessionalCVViewFX {
             }
             if (resume.getAddress() != null && !resume.getAddress().isEmpty()) {
                 String addressPrefix = themeSettings.isUseIcons() ? "📍 " : "";
+                                    
                 Text addressText = new Text(addressPrefix + resume.getAddress());
                 addressText.setFont(Font.font(themeSettings.getBodyFont(), themeSettings.getBodyFontSize()));
                 addressText.setFill(Color.web(themeSettings.getBodyTextColor()));
@@ -294,7 +296,8 @@ public class ProfessionalCVViewFX {
                         "-fx-background-color: #ecf0f1; " +
                         "-fx-text-fill: " + themeSettings.getHeaderTextColor() + "; " +
                         "-fx-padding: 5 12; " +
-                        "-fx-background-radius: 15;"
+                        
+                                                            "-fx-background-radius: 15;"
                     );
                     skillsFlow.getChildren().add(skillLabel);
                 }
@@ -381,7 +384,8 @@ public class ProfessionalCVViewFX {
         paper.setMinHeight(900);
         paper.setStyle(
             "-fx-background-color: white; " +
-            "-fx-effect: dropshadow(gaussian, rgba(102,126,234,0.2), 30, 0, 0, 8);"
+            
+                                                            "-fx-effect: dropshadow(gaussian, rgba(102,126,234,0.2), 30, 0, 0, 8);"
         );
         paper.setPadding(new Insets(40, 50, 40, 50));
         
@@ -665,7 +669,8 @@ public class ProfessionalCVViewFX {
                 "-fx-background-color: #e74c3c; " +
                 "-fx-text-fill: white; " +
                 "-fx-padding: 7 15; " +
-                "-fx-background-radius: 18;"
+                        
+                                                            "-fx-background-radius: 18;"
             );
             skillsFlow.getChildren().add(skillLabel);
         }
@@ -809,7 +814,8 @@ public class ProfessionalCVViewFX {
         paper.setMinHeight(900);
         paper.setStyle(
             "-fx-background-color: white; " +
-            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 20, 0, 0, 5);"
+            
+                                                            "-fx-effect: dropshadow(gaussian, rgba(0,0,0,0.4), 20, 0, 0, 5);"
         );
         paper.setPadding(new Insets(50, 60, 50, 60));
         
@@ -932,7 +938,8 @@ public class ProfessionalCVViewFX {
                         "-fx-background-color: #ecf0f1; " +
                         "-fx-text-fill: #2c3e50; " +
                         "-fx-padding: 5 12; " +
-                        "-fx-background-radius: 15;"
+                        
+                                                            "-fx-background-radius: 15;"
                     );
                     skillsFlow.getChildren().add(skillLabel);
                 }

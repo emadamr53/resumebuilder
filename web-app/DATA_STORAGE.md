@@ -222,3 +222,4 @@ Possible future features:
 
 **Remember**: All data is stored locally in your browser. Make backups if you need to keep your data safe!
 
+

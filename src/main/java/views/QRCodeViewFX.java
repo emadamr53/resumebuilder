@@ -79,7 +79,7 @@ public class QRCodeViewFX {
         // Back button
         Button backBtn = new Button("← Back");
         backBtn.setStyle("-fx-background-color: rgba(255,255,255,0.2); -fx-text-fill: white; " +
-                        "-fx-font-size: 12px; -fx-cursor: hand; -fx-background-radius: 20;");
+                        "-fx-font-size: 12px; -fx-background-radius: 20;");
         backBtn.setOnAction(e -> stage.close());
         
         // Title
@@ -167,7 +167,8 @@ public class QRCodeViewFX {
         // Copy button
         Button copyBtn = new Button("📋 Copy Link");
         copyBtn.setStyle("-fx-background-color: " + colors.accentPrimary + "; " +
-                        "-fx-text-fill: white; -fx-font-size: 12px; -fx-cursor: hand; " +
+                        "-fx-text-fill: white; -fx-font-size: 12px; " +
+                        
                         "-fx-background-radius: 10; -fx-padding: 8 20;");
         copyBtn.setOnAction(e -> {
             java.awt.Toolkit.getDefaultToolkit().getSystemClipboard()

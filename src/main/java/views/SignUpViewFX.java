@@ -56,10 +56,10 @@ public class SignUpViewFX {
         
         // Close button
         Button closeBtn = new Button("✕");
-        closeBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 18px; -fx-cursor: hand;");
+        closeBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 18px; ");
         closeBtn.setOnAction(e -> System.exit(0));
-        closeBtn.setOnMouseEntered(e -> closeBtn.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-size: 18px; -fx-cursor: hand;"));
-        closeBtn.setOnMouseExited(e -> closeBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 18px; -fx-cursor: hand;"));
+        closeBtn.setOnMouseEntered(e -> closeBtn.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-size: 18px; "));
+        closeBtn.setOnMouseExited(e -> closeBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 18px; "));
         
         HBox topBar = new HBox(closeBtn);
         topBar.setAlignment(Pos.TOP_RIGHT);
@@ -165,8 +165,7 @@ public class SignUpViewFX {
         signUpBtn.setStyle(
             "-fx-background-color: linear-gradient(to right, #11998e, #38ef7d); " +
             "-fx-text-fill: white; " +
-            "-fx-background-radius: 25; " +
-            "-fx-cursor: hand;"
+            "-fx-background-radius: 25;"
         );
         signUpBtn.setEffect(new DropShadow(10, Color.rgb(17, 153, 142, 0.5)));
         

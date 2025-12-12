@@ -81,3 +81,4 @@ Click the **"🔍 FIND MY FILES NOW!"** button in the File Manager screen - it w
 
 **Remember**: Files ARE on your MacBook - we just need to find them! 💪
 
+

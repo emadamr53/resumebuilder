@@ -93,3 +93,4 @@ console.log('Backup downloaded!');
 
 **Summary**: All data is saved locally in your browser's localStorage. It's private, secure, and stays on your device!
 
+

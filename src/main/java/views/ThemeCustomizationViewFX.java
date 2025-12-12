@@ -86,9 +86,9 @@ public class ThemeCustomizationViewFX {
         bar.setStyle("-fx-background-color: #1a1a2e;");
         
         Button backBtn = new Button("← Back");
-        backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 14px; -fx-cursor: hand;");
-        backBtn.setOnMouseEntered(e -> backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 14px; -fx-cursor: hand;"));
-        backBtn.setOnMouseExited(e -> backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 14px; -fx-cursor: hand;"));
+        backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 14px; ");
+        backBtn.setOnMouseEntered(e -> backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 14px; "));
+        backBtn.setOnMouseExited(e -> backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 14px; "));
         backBtn.setOnAction(e -> {
             new ThemeSelectionViewFX().show();
             stage.close();
@@ -108,7 +108,6 @@ public class ThemeCustomizationViewFX {
             "-fx-background-color: #667eea; " +
             "-fx-text-fill: white; " +
             "-fx-font-size: 13px; " +
-            "-fx-cursor: hand; " +
             "-fx-background-radius: 15; " +
             "-fx-padding: 8 20;"
         );
@@ -119,13 +118,13 @@ public class ThemeCustomizationViewFX {
         });
         
         Button closeBtn = new Button("✕");
-        closeBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 16px; -fx-cursor: hand;");
+        closeBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 16px; ");
         closeBtn.setOnAction(e -> {
             new MainViewFX().show();
             stage.close();
         });
-        closeBtn.setOnMouseEntered(e -> closeBtn.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-size: 16px; -fx-cursor: hand; -fx-background-radius: 3;"));
-        closeBtn.setOnMouseExited(e -> closeBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 16px; -fx-cursor: hand;"));
+        closeBtn.setOnMouseEntered(e -> closeBtn.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-size: 16px;  -fx-background-radius: 3;"));
+        closeBtn.setOnMouseExited(e -> closeBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 16px; "));
         
         HBox rightBox = new HBox(15, previewBtn, closeBtn);
         rightBox.setAlignment(Pos.CENTER_RIGHT);
@@ -161,7 +160,6 @@ public class ThemeCustomizationViewFX {
             "-fx-background-color: #95a5a6; " +
             "-fx-text-fill: white; " +
             "-fx-font-size: 14px; " +
-            "-fx-cursor: hand; " +
             "-fx-background-radius: 15; " +
             "-fx-padding: 10 25;"
         );
@@ -173,7 +171,6 @@ public class ThemeCustomizationViewFX {
             "-fx-text-fill: white; " +
             "-fx-font-size: 14px; " +
             "-fx-font-weight: bold; " +
-            "-fx-cursor: hand; " +
             "-fx-background-radius: 15; " +
             "-fx-padding: 10 30;"
         );

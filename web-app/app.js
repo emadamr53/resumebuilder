@@ -200,7 +200,7 @@ function getUsers() {
 }
 
 // Handle resume save
-function handleResumeSave(e) {
+async function handleResumeSave(e) {
     e.preventDefault();
     
     const resume = {
@@ -227,7 +227,9 @@ function handleResumeSave(e) {
     localStorage.setItem(STORAGE_KEY_RESUMES, JSON.stringify(resumes));
     currentResume = resume;
     
-    alert('Resume saved successfully!');
+    // Save to saved_resumes folder as .txt file
+    await saveResumeToSavedResumesFolder(resume);
+    
     showScreen('dashboardScreen');
 }
 
@@ -838,6 +840,193 @@ function initializePWA() {
         deferredPrompt = e;
         // Could show install prompt UI here
     });
+}
+
+// Format resume as readable text
+function formatResumeAsText(resume) {
+    let text = '';
+    text += '═══════════════════════════════════════════════════════════\n';
+    text += '                    RESUME\n';
+    text += '═══════════════════════════════════════════════════════════\n\n';
+    
+    // Personal Information
+    if (resume.name) text += `NAME: ${resume.name}\n`;
+    if (resume.email) text += `EMAIL: ${resume.email}\n`;
+    if (resume.phone) text += `PHONE: ${resume.phone}\n`;
+    if (resume.address) text += `ADDRESS: ${resume.address}\n`;
+    text += '\n';
+    
+    // Skills
+    if (resume.skills && resume.skills.length > 0) {
+        text += '───────────────────────────────────────────────────────────\n';
+        text += 'SKILLS\n';
+        text += '───────────────────────────────────────────────────────────\n';
+        text += resume.skills.join(', ') + '\n\n';
+    }
+    
+    // Experience
+    if (resume.experiences && resume.experiences.length > 0) {
+        text += '───────────────────────────────────────────────────────────\n';
+        text += 'EXPERIENCE\n';
+        text += '───────────────────────────────────────────────────────────\n';
+        resume.experiences.forEach((exp, index) => {
+            if (exp.jobTitle || exp.company) {
+                text += `\n${index + 1}. ${exp.jobTitle || ''}${exp.company ? ' at ' + exp.company : ''}\n`;
+                if (exp.location) text += `   Location: ${exp.location}\n`;
+                if (exp.startDate || exp.endDate) {
+                    text += `   Period: ${exp.startDate || ''} - ${exp.endDate || ''}\n`;
+                }
+                if (exp.description) {
+                    text += `   Description: ${exp.description}\n`;
+                }
+            }
+        });
+        text += '\n';
+    }
+    
+    // Education
+    if (resume.education && resume.education.length > 0) {
+        text += '───────────────────────────────────────────────────────────\n';
+        text += 'EDUCATION\n';
+        text += '───────────────────────────────────────────────────────────\n';
+        resume.education.forEach((edu, index) => {
+            if (edu.institution || edu.degree) {
+                text += `\n${index + 1}. `;
+                if (edu.degree) text += `${edu.degree}`;
+                if (edu.field) text += ` in ${edu.field}`;
+                if (edu.institution) text += `\n   Institution: ${edu.institution}`;
+                if (edu.year) text += `\n   Year: ${edu.year}`;
+                if (edu.gpa) text += `\n   GPA: ${edu.gpa}`;
+                text += '\n';
+            }
+        });
+    }
+    
+    text += '\n═══════════════════════════════════════════════════════════\n';
+    text += `Generated: ${new Date().toLocaleString()}\n`;
+    text += '═══════════════════════════════════════════════════════════\n';
+    
+    return text;
+}
+
+// Store the saved_resumes folder handle (if user selects it)
+let savedResumesFolderHandle = null;
+
+// Save resume to saved_resumes folder as .txt file
+async function saveResumeToSavedResumesFolder(resume) {
+    if (!resume) return;
+    
+    try {
+        // Create safe filename
+        const safeName = (resume.name || 'Resume').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        const dateStr = new Date().toISOString().split('T')[0];
+        const fileName = `${safeName}_resume_${dateStr}.txt`;
+        const textContent = formatResumeAsText(resume);
+        
+        // Try to use File System Access API to save directly to saved_resumes folder
+        if ('showDirectoryPicker' in window || 'showSaveFilePicker' in window) {
+            try {
+                // If we have a saved folder handle, use it
+                if (savedResumesFolderHandle) {
+                    try {
+                        const fileHandle = await savedResumesFolderHandle.getFileHandle(fileName, { create: true });
+                        const writable = await fileHandle.createWritable();
+                        await writable.write(textContent);
+                        await writable.close();
+                        
+                        console.log('✅ Saved directly to saved_resumes folder:', fileName);
+                        return;
+                    } catch (err) {
+                        console.log('Error writing to saved folder, will ask user to select folder again');
+                        savedResumesFolderHandle = null; // Reset if there's an error
+                    }
+                }
+                
+                // Try to get the saved_resumes folder (first time or if reset)
+                if ('showDirectoryPicker' in window) {
+                    try {
+                        // Ask user to select the saved_resumes folder
+                        const folderHandle = await window.showDirectoryPicker({
+                            startIn: 'documents'
+                        });
+                        
+                        // Check if this is the saved_resumes folder (by checking folder name)
+                        // Note: We can't check the full path, but we can store the handle
+                        savedResumesFolderHandle = folderHandle;
+                        localStorage.setItem('resumebuilder_saved_folder_selected', 'true');
+                        
+                        // Now save the file
+                        const fileHandle = await folderHandle.getFileHandle(fileName, { create: true });
+                        const writable = await fileHandle.createWritable();
+                        await writable.write(textContent);
+                        await writable.close();
+                        
+                        console.log('✅ Saved to selected folder:', fileName);
+                        return;
+                    } catch (err) {
+                        if (err.name !== 'AbortError') {
+                            console.log('Directory picker cancelled or error, using download method');
+                        } else {
+                            return; // User cancelled
+                        }
+                    }
+                }
+                
+                // Fallback: Use file picker
+                if ('showSaveFilePicker' in window) {
+                    const fileHandle = await window.showSaveFilePicker({
+                        suggestedName: fileName,
+                        types: [{
+                            description: 'Text Resume File',
+                            accept: { 'text/plain': ['.txt'] }
+                        }]
+                    });
+                    
+                    const writable = await fileHandle.createWritable();
+                    await writable.write(textContent);
+                    await writable.close();
+                    
+                    console.log('✅ Saved via file picker:', fileName);
+                    return;
+                }
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    console.log('File System Access API error, using download method:', err);
+                    // Fall through to download method
+                } else {
+                    return; // User cancelled
+                }
+            }
+        }
+        
+        // Fallback: Download file to Downloads folder
+        // User can move it to saved_resumes folder manually
+        const blob = new Blob([textContent], { type: 'text/plain' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        
+        // Remove immediately
+        setTimeout(() => {
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }, 50);
+        
+        console.log('✅ File downloaded:', fileName);
+        console.log('📍 Location: Downloads folder');
+        console.log('💡 To save in saved_resumes folder:');
+        console.log('   1. Open Finder');
+        console.log('   2. Go to: ~/Desktop/AmrEmadResumeBuilder 3/saved_resumes/');
+        console.log('   3. Move the downloaded file there');
+        
+    } catch (error) {
+        console.error('Error saving resume to file:', error);
+        alert('Error saving file. Please try again.');
+    }
 }
 
 // Export resume (general function)

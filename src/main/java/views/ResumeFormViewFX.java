@@ -1,6 +1,7 @@
 package views;
 
 import javafx.animation.FadeTransition;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -16,8 +17,11 @@ import javafx.stage.Stage;
 import javafx.stage.StageStyle;
 import javafx.util.Duration;
 import managers.ResumeManager;
+import managers.AutoSaveManager;
 import models.Resume;
 import utils.ValidationUtils;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Modern Resume Form View - Clean Card Design
@@ -30,6 +34,10 @@ public class ResumeFormViewFX {
     private TextField txtInstitution, txtDegree, txtYear;
     private TextField txtJobTitle, txtCompany, txtDuration;
     private TextArea txtDescription, txtSkills;
+    
+    // Debounce timer for auto-save on field changes
+    private Timer debounceTimer;
+    private TimerTask debounceTask;
     
     public ResumeFormViewFX() {
         stage = new Stage();
@@ -67,6 +75,15 @@ public class ResumeFormViewFX {
         stage.setScene(scene);
         stage.centerOnScreen();
         
+        // Stop auto-save when window is closed
+        stage.setOnCloseRequest(e -> {
+            AutoSaveManager.stopAutoSave();
+            if (debounceTimer != null) {
+                debounceTimer.cancel();
+                debounceTimer = null;
+            }
+        });
+        
         FadeTransition fadeIn = new FadeTransition(Duration.millis(600), root);
         fadeIn.setFromValue(0);
         fadeIn.setToValue(1);
@@ -84,22 +101,24 @@ public class ResumeFormViewFX {
         backBtn.setStyle(
             "-fx-background-color: transparent; " +
             "-fx-text-fill: #888; " +
-            "-fx-font-size: 14px; " +
-            "-fx-cursor: hand;"
+            "-fx-font-size: 14px;"
         );
         backBtn.setOnMouseEntered(e -> backBtn.setStyle(
             "-fx-background-color: transparent; " +
             "-fx-text-fill: white; " +
-            "-fx-font-size: 14px; " +
-            "-fx-cursor: hand;"
+            "-fx-font-size: 14px;"
         ));
         backBtn.setOnMouseExited(e -> backBtn.setStyle(
             "-fx-background-color: transparent; " +
             "-fx-text-fill: #888; " +
-            "-fx-font-size: 14px; " +
-            "-fx-cursor: hand;"
+            "-fx-font-size: 14px;"
         ));
         backBtn.setOnAction(e -> {
+            AutoSaveManager.stopAutoSave(); // Stop auto-save when leaving
+            if (debounceTimer != null) {
+                debounceTimer.cancel();
+                debounceTimer = null;
+            }
             new MainViewFX().show();
             stage.close();
         });
@@ -116,13 +135,18 @@ public class ResumeFormViewFX {
         
         // Close button
         Button closeBtn = new Button("✕");
-        closeBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 16px; -fx-cursor: hand;");
+        closeBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 16px;");
         closeBtn.setOnAction(e -> {
+            AutoSaveManager.stopAutoSave(); // Stop auto-save when closing
+            if (debounceTimer != null) {
+                debounceTimer.cancel();
+                debounceTimer = null;
+            }
             new MainViewFX().show();
             stage.close();
         });
-        closeBtn.setOnMouseEntered(e -> closeBtn.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-size: 16px; -fx-cursor: hand; -fx-background-radius: 3;"));
-        closeBtn.setOnMouseExited(e -> closeBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 16px; -fx-cursor: hand;"));
+        closeBtn.setOnMouseEntered(e -> closeBtn.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-size: 16px; -fx-background-radius: 3;"));
+        closeBtn.setOnMouseExited(e -> closeBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 16px;"));
         
         bar.getChildren().addAll(backBtn, spacer1, title, spacer2, closeBtn);
         
@@ -204,8 +228,7 @@ public class ResumeFormViewFX {
         saveBtn.setStyle(
             "-fx-background-color: linear-gradient(to right, #667eea, #764ba2); " +
             "-fx-text-fill: white; " +
-            "-fx-background-radius: 30; " +
-            "-fx-cursor: hand;"
+            "-fx-background-radius: 30;"
         );
         saveBtn.setEffect(new DropShadow(15, Color.rgb(102, 126, 234, 0.5)));
         saveBtn.setOnAction(e -> handleSave());
@@ -372,6 +395,9 @@ public class ResumeFormViewFX {
         
         ResumeManager.saveResume(resume);
         
+        // Trigger immediate auto-save after manual save
+        AutoSaveManager.triggerAutoSave(resume);
+        
         showAlert(Alert.AlertType.INFORMATION, "Resume saved successfully!");
     }
     
@@ -385,5 +411,114 @@ public class ResumeFormViewFX {
     
     public void show() {
         stage.show();
+        // Start auto-save when form is shown
+        startAutoSave();
+    }
+    
+    /**
+     * Start auto-saving the resume every 10 seconds and on field changes
+     */
+    private void startAutoSave() {
+        // Start periodic auto-save (every 10 seconds)
+        AutoSaveManager.startAutoSave(() -> {
+            // Build Resume object from current form fields
+            return buildResumeFromFields();
+        });
+        
+        // Add change listeners to all fields for immediate auto-save
+        setupAutoSaveListeners();
+    }
+    
+    /**
+     * Setup change listeners on all text fields to trigger auto-save immediately
+     * Uses debounce to wait 2 seconds after user stops typing before saving
+     */
+    private void setupAutoSaveListeners() {
+        debounceTimer = new Timer(true); // Daemon thread
+        
+        Runnable triggerSave = () -> {
+            Platform.runLater(() -> {
+                Resume resume = buildResumeFromFields();
+                if (resume != null) {
+                    // Trigger immediate save
+                    AutoSaveManager.triggerAutoSave(resume);
+                    System.out.println("💾 Auto-saved on field change!");
+                }
+            });
+        };
+        
+        // Helper method to schedule debounced save
+        Runnable scheduleSave = () -> {
+            if (debounceTask != null) {
+                debounceTask.cancel();
+            }
+            debounceTask = new TimerTask() {
+                @Override
+                public void run() {
+                    triggerSave.run();
+                }
+            };
+            debounceTimer.schedule(debounceTask, 2000); // Wait 2 seconds after user stops typing
+        };
+        
+        // Add listeners to all text fields
+        txtName.textProperty().addListener((obs, oldVal, newVal) -> scheduleSave.run());
+        txtEmail.textProperty().addListener((obs, oldVal, newVal) -> scheduleSave.run());
+        txtPhone.textProperty().addListener((obs, oldVal, newVal) -> scheduleSave.run());
+        txtAddress.textProperty().addListener((obs, oldVal, newVal) -> scheduleSave.run());
+        txtInstitution.textProperty().addListener((obs, oldVal, newVal) -> scheduleSave.run());
+        txtDegree.textProperty().addListener((obs, oldVal, newVal) -> scheduleSave.run());
+        txtYear.textProperty().addListener((obs, oldVal, newVal) -> scheduleSave.run());
+        txtJobTitle.textProperty().addListener((obs, oldVal, newVal) -> scheduleSave.run());
+        txtCompany.textProperty().addListener((obs, oldVal, newVal) -> scheduleSave.run());
+        txtDuration.textProperty().addListener((obs, oldVal, newVal) -> scheduleSave.run());
+        txtDescription.textProperty().addListener((obs, oldVal, newVal) -> scheduleSave.run());
+        txtSkills.textProperty().addListener((obs, oldVal, newVal) -> scheduleSave.run());
+    }
+    
+    /**
+     * Build a Resume object from the current form field values
+     * This is used for auto-save (no validation)
+     * Now saves even with partial data - as long as at least one field has content
+     */
+    private Resume buildResumeFromFields() {
+        // Check if at least one field has content
+        boolean hasContent = !txtName.getText().trim().isEmpty() ||
+                           !txtEmail.getText().trim().isEmpty() ||
+                           !txtPhone.getText().trim().isEmpty() ||
+                           !txtAddress.getText().trim().isEmpty() ||
+                           !txtInstitution.getText().trim().isEmpty() ||
+                           !txtDegree.getText().trim().isEmpty() ||
+                           !txtYear.getText().trim().isEmpty() ||
+                           !txtJobTitle.getText().trim().isEmpty() ||
+                           !txtCompany.getText().trim().isEmpty() ||
+                           !txtDuration.getText().trim().isEmpty() ||
+                           !txtDescription.getText().trim().isEmpty() ||
+                           !txtSkills.getText().trim().isEmpty();
+        
+        if (!hasContent) {
+            return null; // Don't auto-save completely empty forms
+        }
+        
+        // Use "Draft" as default name if name is empty
+        String name = txtName.getText().trim();
+        if (name.isEmpty()) {
+            name = "Draft Resume";
+        }
+        
+        return new Resume(
+            name,
+            txtEmail.getText().trim(),
+            txtPhone.getText().trim(),
+            txtAddress.getText().trim(),
+            txtInstitution.getText().trim(),
+            txtDegree.getText().trim(),
+            txtYear.getText().trim(),
+            txtJobTitle.getText().trim(),
+            txtCompany.getText().trim(),
+            txtDuration.getText().trim(),
+            txtDescription.getText().trim(),
+            txtSkills.getText().trim()
+        );
     }
 }

@@ -82,7 +82,7 @@ public class JobSuggestionViewFX {
         // Back button
         Button backBtn = new Button("← Back to Dashboard");
         backBtn.setStyle("-fx-background-color: rgba(255,255,255,0.2); -fx-text-fill: white; " +
-                        "-fx-font-size: 12px; -fx-cursor: hand; -fx-background-radius: 20;");
+                        "-fx-font-size: 12px; -fx-background-radius: 20;");
         backBtn.setOnAction(e -> stage.close());
         
         // Title
@@ -146,7 +146,7 @@ public class JobSuggestionViewFX {
         // View Profile button (when connected)
         Button profileBtn = new Button("View Profile");
         profileBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: white; " +
-                          "-fx-font-size: 11px; -fx-cursor: hand; -fx-underline: true;");
+                        "-fx-font-size: 11px;  -fx-underline: true;");
         profileBtn.setOnAction(e -> LinkedInManager.openLinkedInProfile());
         
         section.getChildren().addAll(linkedInStatusLabel, linkedInBtn);
@@ -167,13 +167,13 @@ public class JobSuggestionViewFX {
         if (LinkedInManager.isConnected()) {
             linkedInBtn.setText("Disconnect");
             linkedInBtn.setStyle("-fx-background-color: rgba(255,255,255,0.2); -fx-text-fill: #ff6b6b; " +
-                               "-fx-font-size: 12px; -fx-cursor: hand; -fx-background-radius: 15; " +
-                               "-fx-padding: 5 15;");
+            "-fx-font-size: 12px; -fx-background-radius: 15; " +
+                        "-fx-padding: 5 15;");
         } else {
             linkedInBtn.setText("🔗 Connect LinkedIn");
             linkedInBtn.setStyle("-fx-background-color: #0077b5; -fx-text-fill: white; " +
-                               "-fx-font-size: 12px; -fx-font-weight: bold; -fx-cursor: hand; " +
-                               "-fx-background-radius: 15; -fx-padding: 5 15;");
+            "-fx-font-size: 12px; -fx-font-weight: bold; " +
+                        "-fx-background-radius: 15; -fx-padding: 5 15;");
         }
     }
     
@@ -257,7 +257,7 @@ public class JobSuggestionViewFX {
         searchBtn.setFont(Font.font("Segoe UI", FontWeight.BOLD, 14));
         searchBtn.setStyle(
             "-fx-background-color: linear-gradient(to right, #00d2ff, #3a7bd5); " +
-            "-fx-text-fill: white; -fx-background-radius: 10; -fx-cursor: hand;"
+                        "-fx-text-fill: white; -fx-background-radius: 10; "
         );
         searchBtn.setEffect(new DropShadow(10, Color.rgb(0, 210, 255, 0.5)));
         
@@ -282,7 +282,7 @@ public class JobSuggestionViewFX {
         aiBtn.setFont(Font.font("Segoe UI", FontWeight.BOLD, 14));
         aiBtn.setStyle(
             "-fx-background-color: linear-gradient(to right, #667eea, #764ba2); " +
-            "-fx-text-fill: white; -fx-background-radius: 10; -fx-cursor: hand;"
+                        "-fx-text-fill: white; -fx-background-radius: 10; "
         );
         aiBtn.setEffect(new DropShadow(10, Color.rgb(102, 126, 234, 0.5)));
         
@@ -438,7 +438,7 @@ public class JobSuggestionViewFX {
         
         Label matchBadge = new Label(suggestion.matchScore);
         matchBadge.setStyle("-fx-background-color: #00d26a; -fx-text-fill: white; " +
-                          "-fx-padding: 3 10; -fx-background-radius: 10; -fx-font-size: 11px;");
+                        "-fx-padding: 3 10; -fx-background-radius: 10; -fx-font-size: 11px;");
         
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -459,8 +459,8 @@ public class JobSuggestionViewFX {
         // Apply button
         Button applyBtn = new Button("Search This Job →");
         applyBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #667eea; " +
-                         "-fx-font-size: 13px; -fx-cursor: hand; -fx-border-color: #667eea; " +
-                         "-fx-border-radius: 5; -fx-padding: 5 15;");
+                        "-fx-font-size: 13px; -fx-border-color: #667eea; " +
+                        "-fx-border-radius: 5; -fx-padding: 5 15;");
         applyBtn.setOnAction(e -> {
             txtSkills.setText(suggestion.title);
             performSearch();
@@ -491,7 +491,7 @@ public class JobSuggestionViewFX {
         
         Label typeBadge = new Label(listing.jobType);
         typeBadge.setStyle("-fx-background-color: #3a3a5c; -fx-text-fill: #aaa; " +
-                         "-fx-padding: 2 8; -fx-background-radius: 8; -fx-font-size: 11px;");
+                        "-fx-padding: 2 8; -fx-background-radius: 8; -fx-font-size: 11px;");
         
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -526,8 +526,8 @@ public class JobSuggestionViewFX {
         // Apply button
         Button applyBtn = new Button("Apply Now →");
         applyBtn.setStyle("-fx-background-color: linear-gradient(to right, #667eea, #764ba2); " +
-                         "-fx-text-fill: white; -fx-font-size: 12px; -fx-cursor: hand; " +
-                         "-fx-background-radius: 5; -fx-padding: 8 20;");
+                        "-fx-text-fill: white; -fx-font-size: 12px; " +
+                        "-fx-background-radius: 5; -fx-padding: 8 20;");
         applyBtn.setOnAction(e -> {
             // Open browser to apply
             try {
@@ -540,8 +540,8 @@ public class JobSuggestionViewFX {
         // LinkedIn Easy Apply button
         Button linkedInApplyBtn = new Button("🔗 Easy Apply");
         linkedInApplyBtn.setStyle("-fx-background-color: #0077b5; " +
-                                 "-fx-text-fill: white; -fx-font-size: 12px; -fx-cursor: hand; " +
-                                 "-fx-background-radius: 5; -fx-padding: 8 20;");
+                        "-fx-text-fill: white; -fx-font-size: 12px; " +
+                        "-fx-background-radius: 5; -fx-padding: 8 20;");
         linkedInApplyBtn.setOnAction(e -> {
             // Open LinkedIn with job search for easy apply
             LinkedInManager.searchLinkedInJobs(listing.title, listing.location);
@@ -610,9 +610,10 @@ public class JobSuggestionViewFX {
     
     private String getInputStyle() {
         return "-fx-background-color: #252540; -fx-text-fill: white; " +
-               "-fx-prompt-text-fill: #666; -fx-background-radius: 8; " +
-               "-fx-border-color: #3a3a5c; -fx-border-radius: 8; " +
-               "-fx-padding: 10 15; -fx-font-size: 14px;";
+                "-fx-prompt-text-fill: #666; -fx-background-radius: 8; " +
+                "-fx-border-color: #3a3a5c; -fx-border-radius: 8; " +
+                "-fx-padding: 10 15; -fx-font-size: 14px;";
+                                    
     }
     
     private void showAlert(String message) {

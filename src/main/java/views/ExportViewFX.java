@@ -67,9 +67,9 @@ public class ExportViewFX {
         bar.setStyle("-fx-background-color: #1a1a2e;");
         
         Button backBtn = new Button("← Back");
-        backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 14px; -fx-cursor: hand;");
-        backBtn.setOnMouseEntered(e -> backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 14px; -fx-cursor: hand;"));
-        backBtn.setOnMouseExited(e -> backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 14px; -fx-cursor: hand;"));
+        backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 14px; ");
+        backBtn.setOnMouseEntered(e -> backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: white; -fx-font-size: 14px; "));
+        backBtn.setOnMouseExited(e -> backBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 14px; "));
         backBtn.setOnAction(e -> {
             new MainViewFX().show();
             stage.close();
@@ -85,13 +85,13 @@ public class ExportViewFX {
         HBox.setHgrow(spacer2, Priority.ALWAYS);
         
         Button closeBtn = new Button("✕");
-        closeBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 16px; -fx-cursor: hand;");
+        closeBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 16px; ");
         closeBtn.setOnAction(e -> {
             new MainViewFX().show();
             stage.close();
         });
-        closeBtn.setOnMouseEntered(e -> closeBtn.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-size: 16px; -fx-cursor: hand; -fx-background-radius: 3;"));
-        closeBtn.setOnMouseExited(e -> closeBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 16px; -fx-cursor: hand;"));
+        closeBtn.setOnMouseEntered(e -> closeBtn.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-size: 16px;  -fx-background-radius: 3;"));
+        closeBtn.setOnMouseExited(e -> closeBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 16px; "));
         
         bar.getChildren().addAll(backBtn, spacer1, title, spacer2, closeBtn);
         
@@ -149,9 +149,8 @@ public class ExportViewFX {
         card.setPadding(new Insets(30));
         card.setStyle(
             "-fx-background-color: #1a1a2e; " +
-            "-fx-background-radius: 20; " +
-            "-fx-cursor: hand;"
-        );
+            
+                                                            "-fx-background-radius: 20;");
         card.setEffect(new DropShadow(15, Color.rgb(0, 0, 0, 0.3)));
         
         // Icon
@@ -187,7 +186,6 @@ public class ExportViewFX {
             card.setStyle(
                 "-fx-background-color: linear-gradient(to bottom right, " + color1 + "33, " + color2 + "33); " +
                 "-fx-background-radius: 20; " +
-                "-fx-cursor: hand; " +
                 "-fx-border-color: " + color1 + "; " +
                 "-fx-border-radius: 20; " +
                 "-fx-border-width: 2;"
@@ -201,9 +199,8 @@ public class ExportViewFX {
             st.play();
             card.setStyle(
                 "-fx-background-color: #1a1a2e; " +
-                "-fx-background-radius: 20; " +
-                "-fx-cursor: hand;"
-            );
+                        
+                                                            "-fx-background-radius: 20;");
         });
         
         return card;
@@ -279,6 +276,7 @@ public class ExportViewFX {
             // Ensure .txt extension
             if (!filePath.toLowerCase().endsWith(".txt")) {
                 filePath = filePath + ".txt";
+                                    
             }
             
             // Show progress
@@ -313,6 +311,7 @@ public class ExportViewFX {
                                    "Saved to: " + savedFile.getAbsolutePath() + "\n" +
                                    "File size: " + (savedFile.length() / 1024) + " KB\n\n" +
                                    "Note: This is a .txt file that can be opened in Word or any text editor.";
+                        
                     showAlert(Alert.AlertType.INFORMATION, message);
                     
                     // Try to reveal file in Finder (macOS)

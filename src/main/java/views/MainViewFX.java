@@ -108,6 +108,7 @@ public class MainViewFX {
         User currentUser = SessionManager.getCurrentUser();
         String userName = currentUser != null ? 
             (currentUser.getFullName() != null ? currentUser.getFullName() : currentUser.getUsername()) : "User";
+                        
         
         Circle avatar = new Circle(18);
         avatar.setFill(Color.web(colors.accentPrimary));
@@ -126,7 +127,6 @@ public class MainViewFX {
             "-fx-background-color: " + colors.bgCard + "; " +
             "-fx-text-fill: " + colors.textPrimary + "; " +
             "-fx-font-size: 16px; " +
-            "-fx-cursor: hand; " +
             "-fx-background-radius: 20; " +
             "-fx-padding: 5 12; " +
             "-fx-border-color: " + colors.border + "; " +
@@ -141,7 +141,6 @@ public class MainViewFX {
             "-fx-background-color: " + colors.bgHover + "; " +
             "-fx-text-fill: " + colors.textPrimary + "; " +
             "-fx-font-size: 16px; " +
-            "-fx-cursor: hand; " +
             "-fx-background-radius: 20; " +
             "-fx-padding: 5 12; " +
             "-fx-border-color: " + colors.accentPrimary + "; " +
@@ -151,7 +150,6 @@ public class MainViewFX {
             "-fx-background-color: " + colors.bgCard + "; " +
             "-fx-text-fill: " + colors.textPrimary + "; " +
             "-fx-font-size: 16px; " +
-            "-fx-cursor: hand; " +
             "-fx-background-radius: 20; " +
             "-fx-padding: 5 12; " +
             "-fx-border-color: " + colors.border + "; " +
@@ -163,7 +161,6 @@ public class MainViewFX {
             "-fx-background-color: transparent; " +
             "-fx-text-fill: " + colors.error + "; " +
             "-fx-font-size: 13px; " +
-            "-fx-cursor: hand; " +
             "-fx-border-color: " + colors.error + "; " +
             "-fx-border-radius: 15; " +
             "-fx-padding: 5 15;"
@@ -172,7 +169,6 @@ public class MainViewFX {
             "-fx-background-color: " + colors.error + "; " +
             "-fx-text-fill: white; " +
             "-fx-font-size: 13px; " +
-            "-fx-cursor: hand; " +
             "-fx-border-color: " + colors.error + "; " +
             "-fx-border-radius: 15; " +
             "-fx-padding: 5 15;"
@@ -181,7 +177,6 @@ public class MainViewFX {
             "-fx-background-color: transparent; " +
             "-fx-text-fill: " + colors.error + "; " +
             "-fx-font-size: 13px; " +
-            "-fx-cursor: hand; " +
             "-fx-border-color: " + colors.error + "; " +
             "-fx-border-radius: 15; " +
             "-fx-padding: 5 15;"
@@ -194,10 +189,10 @@ public class MainViewFX {
         
         // Close button
         Button closeBtn = new Button("✕");
-        closeBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + colors.textMuted + "; -fx-font-size: 16px; -fx-cursor: hand;");
+        closeBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + colors.textMuted + "; -fx-font-size: 16px; ");
         closeBtn.setOnAction(e -> System.exit(0));
-        closeBtn.setOnMouseEntered(e -> closeBtn.setStyle("-fx-background-color: " + colors.error + "; -fx-text-fill: white; -fx-font-size: 16px; -fx-cursor: hand; -fx-background-radius: 3;"));
-        closeBtn.setOnMouseExited(e -> closeBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + colors.textMuted + "; -fx-font-size: 16px; -fx-cursor: hand;"));
+        closeBtn.setOnMouseEntered(e -> closeBtn.setStyle("-fx-background-color: " + colors.error + "; -fx-text-fill: white; -fx-font-size: 16px; -fx-background-radius: 3;"));
+        closeBtn.setOnMouseExited(e -> closeBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: " + colors.textMuted + "; -fx-font-size: 16px; "));
         
         userBox.getChildren().addAll(avatarPane, userNameText, themeBtn, logoutBtn, closeBtn);
         
@@ -216,6 +211,7 @@ public class MainViewFX {
         User currentUser = SessionManager.getCurrentUser();
         String userName = currentUser != null ? 
             (currentUser.getFullName() != null ? currentUser.getFullName() : currentUser.getUsername()) : "User";
+                        
         
         Text welcomeText = new Text("Welcome back, " + userName + "!");
         welcomeText.setFont(Font.font("Segoe UI", FontWeight.BOLD, 36));
@@ -332,7 +328,6 @@ public class MainViewFX {
         card.setStyle(
             "-fx-background-color: " + colors.bgCard + "; " +
             "-fx-background-radius: 20; " +
-            "-fx-cursor: hand; " +
             "-fx-border-color: " + colors.border + "; " +
             "-fx-border-radius: 20;"
         );
@@ -371,7 +366,6 @@ public class MainViewFX {
             card.setStyle(
                 "-fx-background-color: " + colors.bgHover + "; " +
                 "-fx-background-radius: 20; " +
-                "-fx-cursor: hand; " +
                 "-fx-border-color: " + color1 + "; " +
                 "-fx-border-radius: 20; " +
                 "-fx-border-width: 2;"
@@ -386,7 +380,6 @@ public class MainViewFX {
             card.setStyle(
                 "-fx-background-color: " + colors.bgCard + "; " +
                 "-fx-background-radius: 20; " +
-                "-fx-cursor: hand; " +
                 "-fx-border-color: " + colors.border + "; " +
                 "-fx-border-radius: 20;"
             );

@@ -63,3 +63,4 @@ Files are saved as **Plain Text (.txt)**:
 
 **Remember**: Once the file is saved, you can close the browser. The file is on your MacBook and you can open it anytime from Finder!
 
+

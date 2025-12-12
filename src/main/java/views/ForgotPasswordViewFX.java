@@ -75,9 +75,7 @@ public class ForgotPasswordViewFX {
         resetBtn.setStyle(
             "-fx-background-color: linear-gradient(to right, #667eea, #764ba2); " +
             "-fx-text-fill: white; " +
-            "-fx-background-radius: 25; " +
-            "-fx-cursor: hand;"
-        );
+            "-fx-background-radius: 25;");
         resetBtn.setEffect(new DropShadow(10, Color.rgb(102, 126, 234, 0.5)));
         
         resetBtn.setOnMouseEntered(e -> {
@@ -120,13 +118,13 @@ public class ForgotPasswordViewFX {
         
         // Close button
         Button closeBtn = new Button("✕");
-        closeBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 18px; -fx-cursor: hand;");
+        closeBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 18px; ");
         closeBtn.setOnAction(e -> {
             new LoginViewFX().show();
             stage.close();
         });
-        closeBtn.setOnMouseEntered(e -> closeBtn.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-size: 18px; -fx-cursor: hand;"));
-        closeBtn.setOnMouseExited(e -> closeBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 18px; -fx-cursor: hand;"));
+        closeBtn.setOnMouseEntered(e -> closeBtn.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-size: 18px; "));
+        closeBtn.setOnMouseExited(e -> closeBtn.setStyle("-fx-background-color: transparent; -fx-text-fill: #888; -fx-font-size: 18px; "));
         
         HBox topBar = new HBox(closeBtn);
         topBar.setAlignment(Pos.TOP_RIGHT);
@@ -169,7 +167,7 @@ public class ForgotPasswordViewFX {
             "-fx-background-radius: 10; " +
             "-fx-border-color: #2a4a7a; " +
             "-fx-border-radius: 10; " +
-            "-fx-padding: 10 15;"
+                                                                                                                        "-fx-padding: 10 15;"
         );
         
         field.focusedProperty().addListener((obs, oldVal, newVal) -> {
@@ -186,13 +184,13 @@ public class ForgotPasswordViewFX {
                 );
             } else {
                 field.setStyle(
-                    "-fx-background-color: #0f3460; " +
-                    "-fx-text-fill: white; " +
-                    "-fx-prompt-text-fill: #666; " +
-                    "-fx-background-radius: 10; " +
-                    "-fx-border-color: #2a4a7a; " +
-                    "-fx-border-radius: 10; " +
-                    "-fx-padding: 10 15;"
+            "-fx-background-color: #0f3460; " +
+            "-fx-text-fill: white; " +
+            "-fx-prompt-text-fill: #666; " +
+            "-fx-background-radius: 10; " +
+            "-fx-border-color: #2a4a7a; " +
+            "-fx-border-radius: 10; " +
+                                                                                                                        "-fx-padding: 10 15;"
                 );
             }
         });

@@ -208,3 +208,4 @@ chmod +x open-chrome-storage.sh
 
 **Tip**: The easiest way is to use the browser's Developer Tools (F12) or export your data as JSON using the script above!
 
+

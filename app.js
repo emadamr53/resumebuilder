@@ -1605,10 +1605,13 @@ function saveResumeToDownloads() {
         const safeName = (resume.name || 'Resume').replace(/[^a-z0-9]/gi, '_').toLowerCase();
         const dateStr = new Date().toISOString().split('T')[0];
         const timeStr = new Date().toTimeString().split(' ')[0].replace(/:/g, '-');
-        const fileName = `RESUME_${safeName}_${dateStr}_${timeStr}.json`;
+        
+        // Save as READABLE TEXT FILE (opens in any app!)
+        const fileName = `RESUME_${safeName}_${dateStr}_${timeStr}.txt`;
+        const textContent = formatResumeAsText(resume);
         
         // Create and download file - THIS SAVES TO YOUR MACBOOK!
-        const blob = new Blob([jsonContent], { type: 'application/json' });
+        const blob = new Blob([textContent], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
@@ -1637,7 +1640,8 @@ function saveResumeToDownloads() {
             filePath: '~/Downloads/' + fileName,
             fullPath: '/Users/amremad/Downloads/' + fileName,
             savedAt: new Date().toISOString(),
-            fileSize: jsonContent.length
+            fileSize: textContent.length,
+            format: 'TXT (Readable Text)'
         };
         localStorage.setItem('resumebuilder_last_saved_file', JSON.stringify(fileInfo));
         

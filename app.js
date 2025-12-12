@@ -6,7 +6,6 @@ const STORAGE_KEY_CURRENT_USER = 'resumebuilder_current_user';
 const STORAGE_KEY_RESUMES = 'resumebuilder_resumes';
 const STORAGE_KEY_THEME = 'resumebuilder_theme';
 const STORAGE_KEY_DARK_MODE = 'resumebuilder_dark_mode';
-const STORAGE_KEY_AUTOSAVE = 'resumebuilder_autosave';
 
 // App State
 let currentUser = null;
@@ -14,8 +13,6 @@ let currentResume = null;
 let currentTheme = 'professional';
 let isDarkMode = true;
 let selectedThemeForPreview = 'professional';
-let autoSaveTimer = null;
-let autoSaveStatus = null; // 'saving', 'saved', null
 
 // Theme configurations
 const themes = {
@@ -51,26 +48,19 @@ const themes = {
 
 // Initialize App
 document.addEventListener('DOMContentLoaded', () => {
-    loadThemeSettings();
-    checkURLParams(); // Check for public resume page
-    checkAuth();
-    setupEventListeners();
-    initializePWA();
-    applyTheme();
-});
-
-// Check URL parameters for public resume page
-function checkURLParams() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const username = urlParams.get('user');
-    
-    if (username) {
-        // Show public resume page
-        showPublicResumePage(username);
-        return true;
+    try {
+        console.log('🚀 Resume Builder App Initializing...');
+        loadThemeSettings();
+        checkAuth();
+        setupEventListeners();
+        initializePWA();
+        applyTheme();
+        console.log('✅ Resume Builder App Initialized Successfully!');
+    } catch (error) {
+        console.error('❌ App initialization error:', error);
+        alert('Error initializing app. Please refresh the page.\nError: ' + error.message);
     }
-    return false;
-}
+});
 
 // Load theme settings from storage
 function loadThemeSettings() {
@@ -92,48 +82,58 @@ function loadThemeSettings() {
 
 // Setup event listeners
 function setupEventListeners() {
-    // Login form
-    document.getElementById('loginForm').addEventListener('submit', handleLogin);
-    
-    // Signup form
-    document.getElementById('signupForm').addEventListener('submit', handleSignup);
-    
-    // Screen navigation
-    document.getElementById('showSignup').addEventListener('click', (e) => {
-        e.preventDefault();
-        showScreen('signupScreen');
-    });
-    
-    document.getElementById('showLogin').addEventListener('click', (e) => {
-        e.preventDefault();
-        showScreen('loginScreen');
-    });
-    
-    // Forgot password
-    document.getElementById('showForgotPassword').addEventListener('click', (e) => {
-        e.preventDefault();
-        showScreen('forgotPasswordScreen');
-    });
-    
-    document.getElementById('showLoginFromForgot').addEventListener('click', (e) => {
-        e.preventDefault();
-        showScreen('loginScreen');
-    });
-    
-    // Forgot password form
-    document.getElementById('forgotPasswordForm').addEventListener('submit', handleForgotPassword);
-    
-    // Logout
-    document.getElementById('logoutBtn').addEventListener('click', handleLogout);
-    
-    // Theme toggle
-    document.getElementById('themeToggle').addEventListener('click', toggleDarkMode);
-    
-    // Resume form
-    document.getElementById('resumeForm').addEventListener('submit', handleResumeSave);
-    
-    // Setup auto-save listeners (will be attached when form loads)
-    setupAutoSave();
+    try {
+        // Login form
+        const loginForm = document.getElementById('loginForm');
+        if (loginForm) {
+            loginForm.addEventListener('submit', handleLogin);
+        }
+        
+        // Signup form
+        const signupForm = document.getElementById('signupForm');
+        if (signupForm) {
+            signupForm.addEventListener('submit', handleSignup);
+        } else {
+            console.error('Signup form not found!');
+        }
+        
+        // Screen navigation
+        const showSignupLink = document.getElementById('showSignup');
+        if (showSignupLink) {
+            showSignupLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                showScreen('signupScreen');
+            });
+        }
+        
+        const showLoginLink = document.getElementById('showLogin');
+        if (showLoginLink) {
+            showLoginLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                showScreen('loginScreen');
+            });
+        }
+        
+        // Logout
+        const logoutBtn = document.getElementById('logoutBtn');
+        if (logoutBtn) {
+            logoutBtn.addEventListener('click', handleLogout);
+        }
+        
+        // Theme toggle
+        const themeToggle = document.getElementById('themeToggle');
+        if (themeToggle) {
+            themeToggle.addEventListener('click', toggleDarkMode);
+        }
+        
+        // Resume form
+        const resumeForm = document.getElementById('resumeForm');
+        if (resumeForm) {
+            resumeForm.addEventListener('submit', handleResumeSave);
+        }
+    } catch (error) {
+        console.error('Error setting up event listeners:', error);
+    }
 }
 
 // Show screen
@@ -152,73 +152,111 @@ function showScreen(screenId) {
         generateQRCode();
     } else if (screenId === 'themeSelectionScreen') {
         highlightSelectedTheme();
-    } else if (screenId === 'publicResumeScreen') {
-        // Public resume page is handled by showPublicResumePage
-    
-    // Debug: Log current state
-    if (currentUser) {
-        console.log('Current user:', currentUser);
-        const resume = getCurrentResume();
-        console.log('Current resume:', resume);
     }
 }
 
 // Handle login
 function handleLogin(e) {
     e.preventDefault();
-    const email = document.getElementById('loginEmail').value;
-    const password = document.getElementById('loginPassword').value;
     
-    const users = getUsers();
-    const user = users.find(u => u.email === email && u.password === password);
-    
-    if (user) {
-        currentUser = user;
-        localStorage.setItem(STORAGE_KEY_CURRENT_USER, JSON.stringify(user));
-        showScreen('dashboardScreen');
-        updateWelcomeText();
-    } else {
-        alert('Invalid email or password!');
+    try {
+        const email = document.getElementById('loginEmail').value.trim().toLowerCase();
+        const password = document.getElementById('loginPassword').value;
+        
+        if (!email || !password) {
+            alert('Please enter both email and password!');
+            return;
+        }
+        
+        const users = getUsers();
+        const user = users.find(u => 
+            u.email && u.email.toLowerCase() === email && u.password === password
+        );
+        
+        if (user) {
+            currentUser = user;
+            localStorage.setItem(STORAGE_KEY_CURRENT_USER, JSON.stringify(user));
+            showScreen('dashboardScreen');
+            updateWelcomeText();
+            
+            // Clear login form
+            document.getElementById('loginForm').reset();
+        } else {
+            alert('❌ Invalid email or password! Please check your credentials or sign up for a new account.');
+        }
+    } catch (error) {
+        console.error('Login error:', error);
+        alert('An error occurred during login. Please try again.\nError: ' + error.message);
     }
 }
 
 // Handle signup
 function handleSignup(e) {
     e.preventDefault();
-    const name = document.getElementById('signupName').value;
-    const username = document.getElementById('signupUsername').value;
-    const email = document.getElementById('signupEmail').value;
-    const password = document.getElementById('signupPassword').value;
     
-    const users = getUsers();
-    
-    if (users.find(u => u.email === email)) {
-        alert('Email already exists!');
-        return;
+    try {
+        const name = document.getElementById('signupName').value.trim();
+        const username = document.getElementById('signupUsername').value.trim();
+        const email = document.getElementById('signupEmail').value.trim();
+        const password = document.getElementById('signupPassword').value;
+        
+        // Validation
+        if (!name || !username || !email || !password) {
+            alert('Please fill in all fields!');
+            return;
+        }
+        
+        if (password.length < 6) {
+            alert('Password must be at least 6 characters long!');
+            return;
+        }
+        
+        const users = getUsers();
+        
+        // Check if email already exists
+        if (users.find(u => u.email && u.email.toLowerCase() === email.toLowerCase())) {
+            alert('Email already exists! Please use a different email.');
+            return;
+        }
+        
+        // Check if username already exists
+        if (users.find(u => u.username && u.username.toLowerCase() === username.toLowerCase())) {
+            alert('Username already taken! Please choose a different username.');
+            return;
+        }
+        
+        // Create new user
+        const newUser = {
+            id: Date.now(),
+            name: name,
+            username: username,
+            email: email.toLowerCase(),
+            password: password,
+            createdAt: new Date().toISOString()
+        };
+        
+        // Save to storage
+        users.push(newUser);
+        localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(users));
+        
+        // Set as current user
+        currentUser = newUser;
+        localStorage.setItem(STORAGE_KEY_CURRENT_USER, JSON.stringify(newUser));
+        
+        // Show success message
+        alert('✅ Account created successfully! Welcome, ' + name + '!');
+        
+        // Navigate to dashboard
+        showScreen('dashboardScreen');
+        updateWelcomeText();
+        
+        // Clear signup form
+        document.getElementById('signupForm').reset();
+        
+    } catch (error) {
+        console.error('Signup error:', error);
+        alert('An error occurred during signup. Please try again.\nError: ' + error.message);
     }
-    
-    if (users.find(u => u.username === username)) {
-        alert('Username already taken!');
-        return;
-    }
-    
-    const newUser = {
-        id: Date.now(),
-        name,
-        username,
-        email,
-        password
-    };
-    
-    users.push(newUser);
-    localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(users));
-    
-    currentUser = newUser;
-    localStorage.setItem(STORAGE_KEY_CURRENT_USER, JSON.stringify(newUser));
-    
-    showScreen('dashboardScreen');
-    updateWelcomeText();
-    alert('Account created successfully!');
 }
 
 // Handle logout
@@ -226,49 +264,6 @@ function handleLogout() {
     currentUser = null;
     localStorage.removeItem(STORAGE_KEY_CURRENT_USER);
     showScreen('loginScreen');
-}
-
-// Handle forgot password
-function handleForgotPassword(e) {
-    e.preventDefault();
-    const email = document.getElementById('forgotEmail').value;
-    const newPassword = document.getElementById('forgotNewPassword').value;
-    const confirmPassword = document.getElementById('forgotConfirmPassword').value;
-    
-    // Validation
-    if (!email || !newPassword || !confirmPassword) {
-        alert('All fields are required!');
-        return;
-    }
-    
-    if (newPassword.length < 6) {
-        alert('Password must be at least 6 characters long!');
-        return;
-    }
-    
-    if (newPassword !== confirmPassword) {
-        alert('Passwords do not match!');
-        return;
-    }
-    
-    // Get users from storage
-    const users = getUsers();
-    const userIndex = users.findIndex(u => u.email === email);
-    
-    if (userIndex === -1) {
-        alert('Email not found in our system!');
-        return;
-    }
-    
-    // Update password
-    users[userIndex].password = newPassword;
-    localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(users));
-    
-    alert('Password reset successfully! You can now sign in with your new password.');
-    showScreen('loginScreen');
-    
-    // Clear form
-    document.getElementById('forgotPasswordForm').reset();
 }
 
 // Update welcome text
@@ -285,262 +280,37 @@ function getUsers() {
 }
 
 // Handle resume save
-function handleResumeSave(e) {
+async function handleResumeSave(e) {
     e.preventDefault();
     
-    // Check if user is logged in
-    if (!currentUser) {
-        alert('Please login first to save your resume!');
-        showScreen('loginScreen');
-        return;
-    }
+    const resume = {
+        id: Date.now(),
+        userId: currentUser.id,
+        name: document.getElementById('resumeName').value,
+        email: document.getElementById('resumeEmail').value,
+        phone: document.getElementById('resumePhone').value,
+        address: document.getElementById('resumeAddress').value,
+        skills: document.getElementById('resumeSkills').value.split(',').map(s => s.trim()).filter(s => s),
+        experiences: getExperiences(),
+        education: getEducation()
+    };
     
-    // Validate required fields
-    const name = document.getElementById('resumeName').value.trim();
-    const email = document.getElementById('resumeEmail').value.trim();
-    const phone = document.getElementById('resumePhone').value.trim();
+    const resumes = getResumes();
+    const existingIndex = resumes.findIndex(r => r.userId === currentUser.id);
     
-    if (!name || !email) {
-        alert('Please fill in at least your name and email!');
-        return;
-    }
-    
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-        alert('Please enter a valid email address!');
-        return;
-    }
-    
-    try {
-        const resume = {
-            id: Date.now(),
-            userId: currentUser.id,
-            name: name,
-            email: email,
-            phone: phone,
-            address: document.getElementById('resumeAddress').value.trim(),
-            skills: document.getElementById('resumeSkills').value.split(',').map(s => s.trim()).filter(s => s),
-            experiences: getExperiences(),
-            education: getEducation(),
-            lastUpdated: new Date().toISOString()
-        };
-        
-        const resumes = getResumes();
-        const existingIndex = resumes.findIndex(r => r.userId === currentUser.id);
-        
-        if (existingIndex >= 0) {
-            // Keep the original ID when updating
-            resume.id = resumes[existingIndex].id;
-            resumes[existingIndex] = resume;
-            console.log('Resume updated:', resume);
-        } else {
-            resumes.push(resume);
-            console.log('Resume created:', resume);
-        }
-        
-        // Save to localStorage
-        try {
-            localStorage.setItem(STORAGE_KEY_RESUMES, JSON.stringify(resumes));
-            currentResume = resume;
-            console.log('Resume saved to localStorage successfully');
-            
-            // Clear auto-save draft after successful save
-            clearAutoSave();
-            
-            // AUTOMATICALLY SAVE TO FINDER!
-            saveResumeToMacBookAutomatically(resume);
-            
-            // Verify it was saved
-            const saved = getResumes();
-            const verify = saved.find(r => r.userId === currentUser.id);
-            if (verify) {
-                const lastFile = JSON.parse(localStorage.getItem('resumebuilder_last_saved_file') || '{}');
-                const fileMsg = lastFile.fileName ? 
-                    `\n\n✅ SAVED TO FINDER!\n📄 File: ${lastFile.fileName}\n📍 Finder → Downloads folder\n💡 Open Finder (⌘ + Shift + D) to see it!` : 
-                    `\n\n✅ File saved to Finder Downloads!`;
-                
-                alert('✅ Resume saved!' + fileMsg);
-                showScreen('dashboardScreen');
-            } else {
-                throw new Error('Resume not found after save');
-            }
-        } catch (storageError) {
-            console.error('localStorage error:', storageError);
-            alert('⚠️ Error saving resume. Your browser may be blocking localStorage.\n\nPlease:\n1. Check browser settings\n2. Try a different browser\n3. Make sure you\'re not in private/incognito mode');
-        }
-    } catch (error) {
-        console.error('Error saving resume:', error);
-        alert('❌ Error saving resume: ' + error.message);
-    }
-}
-
-// ==================== AUTO-SAVE FUNCTIONALITY ====================
-
-// Setup auto-save system
-function setupAutoSave() {
-    // Auto-save will be set up when form loads
-    console.log('Auto-save system initialized');
-}
-
-// Setup auto-save listeners on form inputs
-function setupAutoSaveListeners() {
-    if (!currentUser) return;
-    
-    // Remove existing listeners to avoid duplicates
-    const form = document.getElementById('resumeForm');
-    if (!form) return;
-    
-    // Get all form inputs
-    const inputs = form.querySelectorAll('input, textarea');
-    const expItems = document.querySelectorAll('.exp-item input, .exp-item textarea');
-    const eduItems = document.querySelectorAll('.edu-item input, .edu-item textarea');
-    
-    // Combine all inputs
-    const allInputs = [...inputs, ...expItems, ...eduItems];
-    
-    // Add auto-save listener to each input
-    allInputs.forEach(input => {
-        // Remove existing listeners
-        input.removeEventListener('input', triggerAutoSave);
-        // Add new listener
-        input.addEventListener('input', triggerAutoSave);
-    });
-    
-    console.log('Auto-save listeners attached to', allInputs.length, 'inputs');
-}
-
-// Trigger auto-save (debounced)
-function triggerAutoSave() {
-    if (!currentUser) return;
-    
-    // Clear existing timer
-    if (autoSaveTimer) {
-        clearTimeout(autoSaveTimer);
-    }
-    
-    // Show "Saving..." status
-    showAutoSaveStatus('saving', 'Saving...');
-    
-    // Set new timer (save after 2 seconds of no typing)
-    autoSaveTimer = setTimeout(() => {
-        performAutoSave();
-    }, 2000);
-}
-
-        // Perform the actual auto-save
-function performAutoSave() {
-    if (!currentUser) return;
-    
-    try {
-        // Get form data
-        const resumeData = {
-            userId: currentUser.id,
-            name: document.getElementById('resumeName')?.value.trim() || '',
-            email: document.getElementById('resumeEmail')?.value.trim() || '',
-            phone: document.getElementById('resumePhone')?.value.trim() || '',
-            address: document.getElementById('resumeAddress')?.value.trim() || '',
-            skills: document.getElementById('resumeSkills')?.value.split(',').map(s => s.trim()).filter(s => s) || [],
-            experiences: getExperiences(),
-            education: getEducation(),
-            autoSavedAt: new Date().toISOString()
-        };
-        
-        // Save to localStorage
-        localStorage.setItem(STORAGE_KEY_AUTOSAVE + '_' + currentUser.id, JSON.stringify(resumeData));
-        
-        console.log('Auto-saved resume draft');
-        showAutoSaveStatus('saved', 'Draft saved');
-        
-        // ALSO AUTO-SAVE TO MACBOOK EVERY 30 SECONDS (if user has entered data)
-        if (resumeData.name || resumeData.email) {
-            // Only save to MacBook if there's actual data
-            const lastAutoSave = localStorage.getItem('resumebuilder_last_autosave_macbook');
-            const now = Date.now();
-            
-            // Save to MacBook every 30 seconds
-            if (!lastAutoSave || (now - parseInt(lastAutoSave)) > 30000) {
-                saveResumeToMacBookAutomatically({
-                    id: Date.now(),
-                    userId: currentUser.id,
-                    ...resumeData
-                });
-                localStorage.setItem('resumebuilder_last_autosave_macbook', now.toString());
-                console.log('✅ Auto-saved to MacBook!');
-            }
-        }
-        
-        // Clear status after 3 seconds
-        setTimeout(() => {
-            if (autoSaveStatus === 'saved') {
-                showAutoSaveStatus(null, '');
-            }
-        }, 3000);
-        
-    } catch (error) {
-        console.error('Auto-save error:', error);
-        showAutoSaveStatus('error', 'Save failed');
-    }
-}
-
-// Load auto-saved draft
-function loadAutoSave() {
-    if (!currentUser) return null;
-    
-    try {
-        const autoSaveStr = localStorage.getItem(STORAGE_KEY_AUTOSAVE + '_' + currentUser.id);
-        if (autoSaveStr) {
-            const autoSaved = JSON.parse(autoSaveStr);
-            console.log('Auto-saved draft found:', autoSaved);
-            return autoSaved;
-        }
-    } catch (error) {
-        console.error('Error loading auto-save:', error);
-    }
-    
-    return null;
-}
-
-// Clear auto-save draft
-function clearAutoSave() {
-    if (!currentUser) return;
-    
-    try {
-        localStorage.removeItem(STORAGE_KEY_AUTOSAVE + '_' + currentUser.id);
-        console.log('Auto-save draft cleared');
-        showAutoSaveStatus(null, '');
-    } catch (error) {
-        console.error('Error clearing auto-save:', error);
-    }
-}
-
-// Show auto-save status
-function showAutoSaveStatus(status, message) {
-    autoSaveStatus = status;
-    const statusEl = document.getElementById('autoSaveStatus');
-    if (!statusEl) return;
-    
-    statusEl.className = 'auto-save-status';
-    
-    if (status === 'saving') {
-        statusEl.className += ' saving';
-        statusEl.textContent = '💾 Saving...';
-    } else if (status === 'saved') {
-        statusEl.className += ' saved';
-        statusEl.textContent = '✅ Saved';
-    } else if (status === 'restored') {
-        statusEl.className += ' restored';
-        statusEl.textContent = '📋 ' + message;
-        setTimeout(() => {
-            statusEl.textContent = '';
-            statusEl.className = 'auto-save-status';
-        }, 3000);
-    } else if (status === 'error') {
-        statusEl.className += ' error';
-        statusEl.textContent = '❌ ' + message;
+    if (existingIndex >= 0) {
+        resumes[existingIndex] = resume;
     } else {
-        statusEl.textContent = '';
+        resumes.push(resume);
     }
+    
+    localStorage.setItem(STORAGE_KEY_RESUMES, JSON.stringify(resumes));
+    currentResume = resume;
+    
+    // Save to saved_resumes folder as .txt file
+    await saveResumeToSavedResumesFolder(resume);
+    
+    showScreen('dashboardScreen');
 }
 
 // Get experiences from form
@@ -586,17 +356,9 @@ function addExperience() {
         <input type="text" data-field="startDate" placeholder="Start Date (e.g., Jan 2020)">
         <input type="text" data-field="endDate" placeholder="End Date (e.g., Present)">
         <textarea data-field="description" placeholder="Job Description"></textarea>
-        <button type="button" class="remove-btn" onclick="this.parentElement.remove(); triggerAutoSave();">Remove</button>
+        <button type="button" class="remove-btn" onclick="this.parentElement.remove()">Remove</button>
     `;
     container.appendChild(item);
-    
-    // Add auto-save listeners to new inputs
-    item.querySelectorAll('input, textarea').forEach(input => {
-        input.addEventListener('input', triggerAutoSave);
-    });
-    
-    // Trigger auto-save after adding
-    triggerAutoSave();
 }
 
 // Add education field
@@ -610,32 +372,15 @@ function addEducation() {
         <input type="text" data-field="field" placeholder="Field of Study">
         <input type="text" data-field="year" placeholder="Graduation Year">
         <input type="text" data-field="gpa" placeholder="GPA (optional)">
-        <button type="button" class="remove-btn" onclick="this.parentElement.remove(); triggerAutoSave();">Remove</button>
+        <button type="button" class="remove-btn" onclick="this.parentElement.remove()">Remove</button>
     `;
     container.appendChild(item);
-    
-    // Add auto-save listeners to new inputs
-    item.querySelectorAll('input, textarea').forEach(input => {
-        input.addEventListener('input', triggerAutoSave);
-    });
-    
-    // Trigger auto-save after adding
-    triggerAutoSave();
 }
 
 // Load resume form
 function loadResumeForm() {
-    console.log('loadResumeForm: Loading form...');
-    
-    if (!currentUser) {
-        alert('Please login first!');
-        showScreen('loginScreen');
-        return;
-    }
-    
     const resume = getCurrentResume();
     if (resume) {
-        console.log('loadResumeForm: Loading existing resume data');
         document.getElementById('resumeName').value = resume.name || '';
         document.getElementById('resumeEmail').value = resume.email || '';
         document.getElementById('resumePhone').value = resume.phone || '';
@@ -692,30 +437,13 @@ function escapeHtml(text) {
 
 // Load resume preview
 function loadResumePreview() {
-    console.log('loadResumePreview: Loading preview...');
-    
-    if (!currentUser) {
-        console.log('loadResumePreview: No user logged in');
-        const preview = document.getElementById('resumePreview');
-        preview.innerHTML = '<p class="empty-state">Please login first to view your resume!</p>';
-        return;
-    }
-    
     const resume = getCurrentResume();
     const preview = document.getElementById('resumePreview');
     
     if (!resume) {
-        console.log('loadResumePreview: No resume found');
-        preview.innerHTML = `
-            <p class="empty-state">No resume data available. Create a resume first!</p>
-            <button onclick="showScreen('resumeFormScreen')" class="btn btn-primary" style="margin-top: 20px; max-width: 300px;">
-                Create Resume Now
-            </button>
-        `;
+        preview.innerHTML = '<p class="empty-state">No resume data available. Create a resume first!</p>';
         return;
     }
-    
-    console.log('loadResumePreview: Loading resume:', resume);
     
     const theme = themes[selectedThemeForPreview] || themes.professional;
     
@@ -786,35 +514,15 @@ function loadResumePreview() {
 
 // Get current user's resume
 function getCurrentResume() {
-    if (!currentUser) {
-        console.log('getCurrentResume: No current user');
-        return null;
-    }
+    if (!currentUser) return null;
     const resumes = getResumes();
-    const resume = resumes.find(r => r.userId === currentUser.id) || null;
-    if (resume) {
-        console.log('getCurrentResume: Found resume for user', currentUser.id, resume);
-    } else {
-        console.log('getCurrentResume: No resume found for user', currentUser.id);
-    }
-    return resume;
+    return resumes.find(r => r.userId === currentUser.id) || null;
 }
 
 // Get resumes from storage
 function getResumes() {
-    try {
-        const resumesStr = localStorage.getItem(STORAGE_KEY_RESUMES);
-        if (!resumesStr) {
-            console.log('getResumes: No resumes in storage');
-            return [];
-        }
-        const resumes = JSON.parse(resumesStr);
-        console.log('getResumes: Found', resumes.length, 'resume(s)');
-        return resumes;
-    } catch (error) {
-        console.error('getResumes: Error parsing resumes:', error);
-        return [];
-    }
+    const resumesStr = localStorage.getItem(STORAGE_KEY_RESUMES);
+    return resumesStr ? JSON.parse(resumesStr) : [];
 }
 
 // Check authentication
@@ -1153,24 +861,16 @@ function exportAsWord() {
 // Generate QR Code
 function generateQRCode() {
     const resume = getCurrentResume();
-    if (!resume || !currentUser) {
+    if (!resume) {
         document.getElementById('qrCodeContainer').innerHTML = '<p class="empty-state">Create a resume first to generate QR code!</p>';
         return;
     }
     
-    // Generate QR code for public resume page
-    const publicUrl = getPublicResumeURL(currentUser.username);
-    if (!publicUrl) {
-        document.getElementById('qrCodeContainer').innerHTML = '<p class="empty-state">Unable to generate QR code. Please login first.</p>';
-        return;
-    }
+    // Get the GitHub Pages URL
+    const githubPagesUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, '') || 'https://amremad.github.io/resumebuilder/';
+    const qrUrl = githubPagesUrl;
     
-    const qrUrl = publicUrl;
-    
-    document.getElementById('qrUrl').innerHTML = `
-        <strong>Public Resume URL:</strong><br>
-        <a href="${qrUrl}" target="_blank" style="color: var(--accent-primary); word-break: break-all;">${qrUrl}</a>
-    `;
+    document.getElementById('qrUrl').textContent = qrUrl;
     
     // Clear previous QR code
     const canvas = document.getElementById('qrCanvas');
@@ -1208,11 +908,8 @@ function downloadQRCode() {
 function initializePWA() {
     // Register service worker if available
     if ('serviceWorker' in navigator) {
-        // Use relative path for service worker
-        const swPath = './sw.js';
-        navigator.serviceWorker.register(swPath).catch((err) => {
-            console.log('Service worker registration failed:', err);
-            // Continue without service worker
+        navigator.serviceWorker.register('sw.js').catch(() => {
+            // Service worker registration failed, continue without it
         });
     }
     
@@ -1225,329 +922,43 @@ function initializePWA() {
     });
 }
 
-// Export resume (general function)
-function exportResume() {
-    showScreen('exportScreen');
-}
-
-// Show public resume page
-function showPublicResumePage(username = null) {
-    // If username not provided, use current user
-    if (!username && currentUser) {
-        username = currentUser.username;
-    }
-    
-    if (!username) {
-        alert('Please login first to view your public page!');
-        showScreen('loginScreen');
-        return;
-    }
-    
-    // Get user's resume
-    const users = getUsers();
-    const user = users.find(u => u.username === username || u.email === username);
-    
-    if (!user) {
-        document.getElementById('publicResumeContent').innerHTML = 
-            '<p class="empty-state">User not found!</p>';
-        showScreen('publicResumeScreen');
-        return;
-    }
-    
-    // Get user's resume
-    const resumes = getResumes();
-    const resume = resumes.find(r => r.userId === user.id);
-    
-    if (!resume) {
-        document.getElementById('publicResumeContent').innerHTML = 
-            '<p class="empty-state">This user has not created a resume yet.</p>';
-        showScreen('publicResumeScreen');
-        return;
-    }
-    
-    // Update page title
-    document.getElementById('publicUserName').textContent = resume.name || user.name || user.username + "'s Resume";
-    
-    // Load public resume preview
-    loadPublicResumePreview(resume);
-    showScreen('publicResumeScreen');
-    
-    // Update URL without reload
-    const newUrl = window.location.origin + window.location.pathname + '?user=' + encodeURIComponent(username);
-    window.history.pushState({ path: newUrl }, '', newUrl);
-}
-
-// Load public resume preview
-function loadPublicResumePreview(resume) {
-    const preview = document.getElementById('publicResumeContent');
-    
-    if (!resume) {
-        preview.innerHTML = '<p class="empty-state">No resume data available.</p>';
-        return;
-    }
-    
-    const theme = themes[selectedThemeForPreview] || themes.professional;
-    
-    let html = `
-        <div class="resume-content theme-${selectedThemeForPreview}">
-            <div class="resume-header">
-                <h1>${escapeHtml(resume.name || 'Your Name')}</h1>
-                <div class="contact-info">
-                    ${resume.email ? `<span>${escapeHtml(resume.email)}</span>` : ''}
-                    ${resume.phone ? `<span>${escapeHtml(resume.phone)}</span>` : ''}
-                    ${resume.address ? `<span>${escapeHtml(resume.address)}</span>` : ''}
-                </div>
-            </div>
-            
-            ${resume.skills && resume.skills.length > 0 ? `
-            <div class="resume-section">
-                <h2>Skills</h2>
-                <div class="skills-list">
-                    ${resume.skills.map(skill => `<span class="skill-tag">${escapeHtml(skill)}</span>`).join('')}
-                </div>
-            </div>
-            ` : ''}
-            
-            ${resume.experiences && resume.experiences.length > 0 ? `
-            <div class="resume-section">
-                <h2>Experience</h2>
-                ${resume.experiences.map(exp => `
-                    <div class="experience-item">
-                        <div class="exp-header">
-                            <strong>${escapeHtml(exp.jobTitle || 'Job Title')}</strong>
-                            <span class="exp-company">${escapeHtml(exp.company || 'Company')}</span>
-                        </div>
-                        ${exp.location || exp.startDate || exp.endDate ? `
-                        <div class="exp-meta">
-                            ${exp.location ? `<span>📍 ${escapeHtml(exp.location)}</span>` : ''}
-                            ${exp.startDate || exp.endDate ? `<span>📅 ${escapeHtml(exp.startDate || '')} - ${escapeHtml(exp.endDate || '')}</span>` : ''}
-                        </div>
-                        ` : ''}
-                        ${exp.description ? `<p class="exp-description">${escapeHtml(exp.description)}</p>` : ''}
-                    </div>
-                `).join('')}
-            </div>
-            ` : ''}
-            
-            ${resume.education && resume.education.length > 0 ? `
-            <div class="resume-section">
-                <h2>Education</h2>
-                ${resume.education.map(edu => `
-                    <div class="education-item">
-                        <div class="edu-header">
-                            <strong>${escapeHtml(edu.degree || 'Degree')}</strong>
-                            ${edu.field ? `<span>in ${escapeHtml(edu.field)}</span>` : ''}
-                        </div>
-                        <div class="edu-meta">
-                            ${edu.institution ? `<span>${escapeHtml(edu.institution)}</span>` : ''}
-                            ${edu.year ? `<span>${escapeHtml(edu.year)}</span>` : ''}
-                            ${edu.gpa ? `<span>GPA: ${escapeHtml(edu.gpa)}</span>` : ''}
-                        </div>
-                    </div>
-                `).join('')}
-            </div>
-            ` : ''}
-            
-            <div class="resume-section" style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #ecf0f1; text-align: center;">
-                <p style="color: #777; font-size: 12px;">
-                    Created with Resume Builder | 
-                    <a href="${window.location.origin + window.location.pathname}" style="color: var(--accent-primary);">Create Your Resume</a>
-                </p>
-            </div>
-        </div>
-    `;
-    
-    preview.innerHTML = html;
-}
-
-// Get public resume URL
-function getPublicResumeURL(username = null) {
-    if (!username && currentUser) {
-        username = currentUser.username;
-    }
-    if (!username) return null;
-    
-    const baseUrl = window.location.origin + window.location.pathname;
-    return baseUrl + '?user=' + encodeURIComponent(username);
-}
-
-// Share public resume
-function sharePublicResume() {
-    const username = currentUser ? currentUser.username : null;
-    if (!username) {
-        alert('Please login first!');
-        return;
-    }
-    
-    const url = getPublicResumeURL(username);
-    if (navigator.share) {
-        navigator.share({
-            title: `${currentUser.name || currentUser.username}'s Resume`,
-            text: 'Check out my resume!',
-            url: url
-        }).catch(err => console.log('Error sharing:', err));
-    } else {
-        // Fallback: copy to clipboard
-        navigator.clipboard.writeText(url).then(() => {
-            alert('Resume URL copied to clipboard!\n\n' + url);
-        }).catch(() => {
-            prompt('Copy this URL to share your resume:', url);
-        });
-    }
-}
-
-// ==================== FILE MANAGEMENT ====================
-
-// Save resume to file on MacBook
-async function saveResumeToFile() {
-    if (!currentUser) {
-        alert('Please login first!');
-        return;
-    }
-    
-    const resume = getCurrentResume();
-    if (!resume) {
-        alert('No resume to save. Please create a resume first!');
-        return;
-    }
-    
-    try {
-        // Prepare resume data
-        const resumeData = {
-            ...resume,
-            exportedAt: new Date().toISOString(),
-            exportedBy: currentUser.name || currentUser.username,
-            version: '1.0'
-        };
-        
-        const jsonContent = JSON.stringify(resumeData, null, 2);
-        const fileName = `${resume.name || 'Resume'}_${new Date().toISOString().split('T')[0]}.json`;
-        
-        // Try File System Access API (modern browsers)
-        if ('showSaveFilePicker' in window) {
-            try {
-                const fileHandle = await window.showSaveFilePicker({
-                    suggestedName: fileName,
-                    types: [{
-                        description: 'JSON Resume File',
-                        accept: { 'application/json': ['.json'] }
-                    }],
-                    startIn: 'downloads' // Start in Downloads folder
-                });
-                
-                const writable = await fileHandle.createWritable();
-                await writable.write(jsonContent);
-                await writable.close();
-                
-                alert(`✅ Resume saved successfully!\n\nFile: ${fileHandle.name}\n\nYou can find it in your Downloads folder or the location you chose.`);
-                return;
-            } catch (err) {
-                if (err.name !== 'AbortError') {
-                    console.error('File System Access API error:', err);
-                    // Fallback to download
-                }
-            }
-        }
-        
-        // Fallback: Download file
-        saveResumeToDownloads();
-        
-    } catch (error) {
-        console.error('Error saving file:', error);
-        alert('❌ Error saving file: ' + error.message);
-    }
-}
-
-// Automatically save resume to MacBook Finder (called when user saves)
-async function saveResumeToMacBookAutomatically(resume) {
-    if (!resume || !currentUser) return;
-    
-    try {
-        // Create safe filename
-        const safeName = (resume.name || 'Resume').replace(/[^a-z0-9]/gi, '_').toLowerCase();
-        const dateStr = new Date().toISOString().split('T')[0];
-        const timeStr = new Date().toTimeString().split(' ')[0].replace(/:/g, '-');
-        
-        // Save as READABLE TEXT FILE (opens in any text editor!)
-        const textFileName = `${safeName}_Resume_${dateStr}.txt`;
-        const textContent = formatResumeAsText(resume);
-        
-        // SIMPLE: Just download to Finder Downloads folder
-        // This saves directly to: /Users/amremad/Downloads/
-        const textBlob = new Blob([textContent], { type: 'text/plain' });
-        const textUrl = URL.createObjectURL(textBlob);
-        const textLink = document.createElement('a');
-        textLink.href = textUrl;
-        textLink.download = textFileName; // This saves to Finder Downloads
-        textLink.style.display = 'none';
-        document.body.appendChild(textLink);
-        textLink.click();
-        
-        // Remove immediately
-        setTimeout(() => {
-            document.body.removeChild(textLink);
-            URL.revokeObjectURL(textUrl);
-        }, 50);
-        
-        // Store file info
-        const fileInfo = {
-            fileName: textFileName,
-            filePath: '~/Downloads/' + textFileName,
-            fullPath: '/Users/amremad/Downloads/' + textFileName,
-            savedAt: new Date().toISOString(),
-            fileSize: textContent.length,
-            autoSaved: true,
-            format: 'TXT (Readable Text)'
-        };
-        localStorage.setItem('resumebuilder_last_saved_file', JSON.stringify(fileInfo));
-        
-        console.log('✅ Saved to Finder:', textFileName);
-        console.log('📍 Finder Location: ~/Downloads/' + textFileName);
-        console.log('💡 Open Finder → Press ⌘ + Shift + D → Your file is there!');
-        
-    } catch (error) {
-        console.error('Error saving to Finder:', error);
-    }
-}
-
 // Format resume as readable text
 function formatResumeAsText(resume) {
     let text = '';
-    text += '═══════════════════════════════════════════════════════════════\n';
-    text += '                    RESUME / CURRICULUM VITAE\n';
-    text += '═══════════════════════════════════════════════════════════════\n\n';
+    text += '═══════════════════════════════════════════════════════════\n';
+    text += '                    RESUME\n';
+    text += '═══════════════════════════════════════════════════════════\n\n';
     
     // Personal Information
-    text += 'PERSONAL INFORMATION\n';
-    text += '───────────────────────────────────────────────────────────────\n';
-    if (resume.name) text += `Name:           ${resume.name}\n`;
-    if (resume.email) text += `Email:          ${resume.email}\n`;
-    if (resume.phone) text += `Phone:          ${resume.phone}\n`;
-    if (resume.address) text += `Address:        ${resume.address}\n`;
+    if (resume.name) text += `NAME: ${resume.name}\n`;
+    if (resume.email) text += `EMAIL: ${resume.email}\n`;
+    if (resume.phone) text += `PHONE: ${resume.phone}\n`;
+    if (resume.address) text += `ADDRESS: ${resume.address}\n`;
     text += '\n';
     
     // Skills
     if (resume.skills && resume.skills.length > 0) {
+        text += '───────────────────────────────────────────────────────────\n';
         text += 'SKILLS\n';
-        text += '───────────────────────────────────────────────────────────────\n';
-        text += resume.skills.join(', ') + '\n';
-        text += '\n';
+        text += '───────────────────────────────────────────────────────────\n';
+        text += resume.skills.join(', ') + '\n\n';
     }
     
     // Experience
     if (resume.experiences && resume.experiences.length > 0) {
+        text += '───────────────────────────────────────────────────────────\n';
         text += 'EXPERIENCE\n';
-        text += '───────────────────────────────────────────────────────────────\n';
+        text += '───────────────────────────────────────────────────────────\n';
         resume.experiences.forEach((exp, index) => {
-            if (index > 0) text += '\n';
-            if (exp.jobTitle) text += `Position:       ${exp.jobTitle}\n`;
-            if (exp.company) text += `Company:        ${exp.company}\n`;
-            if (exp.location) text += `Location:       ${exp.location}\n`;
-            if (exp.startDate || exp.endDate) {
-                text += `Duration:       ${exp.startDate || ''} - ${exp.endDate || ''}\n`;
-            }
-            if (exp.description) {
-                text += `Description:\n${exp.description}\n`;
+            if (exp.jobTitle || exp.company) {
+                text += `\n${index + 1}. ${exp.jobTitle || ''}${exp.company ? ' at ' + exp.company : ''}\n`;
+                if (exp.location) text += `   Location: ${exp.location}\n`;
+                if (exp.startDate || exp.endDate) {
+                    text += `   Period: ${exp.startDate || ''} - ${exp.endDate || ''}\n`;
+                }
+                if (exp.description) {
+                    text += `   Description: ${exp.description}\n`;
+                }
             }
         });
         text += '\n';
@@ -1555,66 +966,126 @@ function formatResumeAsText(resume) {
     
     // Education
     if (resume.education && resume.education.length > 0) {
+        text += '───────────────────────────────────────────────────────────\n';
         text += 'EDUCATION\n';
-        text += '───────────────────────────────────────────────────────────────\n';
+        text += '───────────────────────────────────────────────────────────\n';
         resume.education.forEach((edu, index) => {
-            if (index > 0) text += '\n';
-            if (edu.degree) text += `Degree:         ${edu.degree}\n`;
-            if (edu.field) text += `Field:          ${edu.field}\n`;
-            if (edu.institution) text += `Institution:    ${edu.institution}\n`;
-            if (edu.year) text += `Year:           ${edu.year}\n`;
-            if (edu.gpa) text += `GPA:            ${edu.gpa}\n`;
+            if (edu.institution || edu.degree) {
+                text += `\n${index + 1}. `;
+                if (edu.degree) text += `${edu.degree}`;
+                if (edu.field) text += ` in ${edu.field}`;
+                if (edu.institution) text += `\n   Institution: ${edu.institution}`;
+                if (edu.year) text += `\n   Year: ${edu.year}`;
+                if (edu.gpa) text += `\n   GPA: ${edu.gpa}`;
+                text += '\n';
+            }
         });
-        text += '\n';
     }
     
-    text += '═══════════════════════════════════════════════════════════════\n';
+    text += '\n═══════════════════════════════════════════════════════════\n';
     text += `Generated: ${new Date().toLocaleString()}\n`;
-    text += '═══════════════════════════════════════════════════════════════\n';
+    text += '═══════════════════════════════════════════════════════════\n';
     
     return text;
 }
 
-// Save resume to Downloads folder on MacBook
-function saveResumeToDownloads() {
-    if (!currentUser) {
-        alert('Please login first!');
-        return;
-    }
-    
-    const resume = getCurrentResume();
-    if (!resume) {
-        alert('No resume to save. Please create a resume first!');
-        return;
-    }
+// Store the saved_resumes folder handle (if user selects it)
+let savedResumesFolderHandle = null;
+
+// Save resume to saved_resumes folder as .txt file
+async function saveResumeToSavedResumesFolder(resume) {
+    if (!resume) return;
     
     try {
-        // Prepare resume data
-        const resumeData = {
-            ...resume,
-            exportedAt: new Date().toISOString(),
-            exportedBy: currentUser.name || currentUser.username,
-            version: '1.0',
-            note: 'This file was saved to your MacBook Downloads folder'
-        };
-        
-        const jsonContent = JSON.stringify(resumeData, null, 2);
-        
-        // Create safe filename with timestamp
+        // Create safe filename
         const safeName = (resume.name || 'Resume').replace(/[^a-z0-9]/gi, '_').toLowerCase();
         const dateStr = new Date().toISOString().split('T')[0];
-        const timeStr = new Date().toTimeString().split(' ')[0].replace(/:/g, '-');
-        
-        // Save as READABLE TEXT FILE - SAVES TO FINDER!
-        const fileName = `${safeName}_Resume_${dateStr}.txt`;
+        const fileName = `${safeName}_resume_${dateStr}.txt`;
         const textContent = formatResumeAsText(resume);
         
-        // Download file - SAVES DIRECTLY TO FINDER DOWNLOADS!
+        // Try to use File System Access API to save directly to saved_resumes folder
+        if ('showDirectoryPicker' in window || 'showSaveFilePicker' in window) {
+            try {
+                // If we have a saved folder handle, use it
+                if (savedResumesFolderHandle) {
+                    try {
+                        const fileHandle = await savedResumesFolderHandle.getFileHandle(fileName, { create: true });
+                        const writable = await fileHandle.createWritable();
+                        await writable.write(textContent);
+                        await writable.close();
+                        
+                        console.log('✅ Saved directly to saved_resumes folder:', fileName);
+                        return;
+                    } catch (err) {
+                        console.log('Error writing to saved folder, will ask user to select folder again');
+                        savedResumesFolderHandle = null; // Reset if there's an error
+                    }
+                }
+                
+                // Try to get the saved_resumes folder (first time or if reset)
+                if ('showDirectoryPicker' in window) {
+                    try {
+                        // Ask user to select the saved_resumes folder
+                        const folderHandle = await window.showDirectoryPicker({
+                            startIn: 'documents'
+                        });
+                        
+                        // Check if this is the saved_resumes folder (by checking folder name)
+                        // Note: We can't check the full path, but we can store the handle
+                        savedResumesFolderHandle = folderHandle;
+                        localStorage.setItem('resumebuilder_saved_folder_selected', 'true');
+                        
+                        // Now save the file
+                        const fileHandle = await folderHandle.getFileHandle(fileName, { create: true });
+                        const writable = await fileHandle.createWritable();
+                        await writable.write(textContent);
+                        await writable.close();
+                        
+                        console.log('✅ Saved to selected folder:', fileName);
+                        return;
+                    } catch (err) {
+                        if (err.name !== 'AbortError') {
+                            console.log('Directory picker cancelled or error, using download method');
+                        } else {
+                            return; // User cancelled
+                        }
+                    }
+                }
+                
+                // Fallback: Use file picker
+                if ('showSaveFilePicker' in window) {
+                    const fileHandle = await window.showSaveFilePicker({
+                        suggestedName: fileName,
+                        types: [{
+                            description: 'Text Resume File',
+                            accept: { 'text/plain': ['.txt'] }
+                        }]
+                    });
+                    
+                    const writable = await fileHandle.createWritable();
+                    await writable.write(textContent);
+                    await writable.close();
+                    
+                    console.log('✅ Saved via file picker:', fileName);
+                    return;
+                }
+            } catch (err) {
+                if (err.name !== 'AbortError') {
+                    console.log('File System Access API error, using download method:', err);
+                    // Fall through to download method
+                } else {
+                    return; // User cancelled
+                }
+            }
+        }
+        
+        // Fallback: Download file to Downloads folder
+        // User can move it to saved_resumes folder manually
         const blob = new Blob([textContent], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = fileName; // Saves to Finder Downloads folder
+        link.download = fileName;
         link.style.display = 'none';
         document.body.appendChild(link);
         link.click();
@@ -1625,676 +1096,20 @@ function saveResumeToDownloads() {
             URL.revokeObjectURL(url);
         }, 50);
         
-        // Store file info
-        const fileInfo = {
-            fileName: fileName,
-            filePath: '~/Downloads/' + fileName,
-            fullPath: '/Users/amremad/Downloads/' + fileName,
-            savedAt: new Date().toISOString(),
-            fileSize: textContent.length,
-            format: 'TXT (Readable Text)'
-        };
-        localStorage.setItem('resumebuilder_last_saved_file', JSON.stringify(fileInfo));
-        
-        // Show simple success message
-        alert(`✅ SAVED TO FINDER!\n\n📄 File: ${fileName}\n📍 Location: Downloads folder\n\n💡 To find it:\n1. Open Finder\n2. Press ⌘ + Shift + D\n3. Your file is there!`);
-        
-        console.log('✅ Saved to Finder:', fileName);
-        console.log('📍 ~/Downloads/' + fileName);
+        console.log('✅ File downloaded:', fileName);
+        console.log('📍 Location: Downloads folder');
+        console.log('💡 To save in saved_resumes folder:');
+        console.log('   1. Open Finder');
+        console.log('   2. Go to: ~/Desktop/AmrEmadResumeBuilder 3/saved_resumes/');
+        console.log('   3. Move the downloaded file there');
         
     } catch (error) {
-        console.error('Error saving to Downloads:', error);
-        alert('❌ Error saving file: ' + error.message + '\n\nPlease try again or check your browser settings.');
+        console.error('Error saving resume to file:', error);
+        alert('Error saving file. Please try again.');
     }
 }
 
-// Show file saved success message
-function showFileSavedSuccess(fileName, fileInfo) {
-        const message = `✅✅✅ FILE SAVED TO YOUR MACBOOK! ✅✅✅\n\n` +
-            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-            `📄 FILE NAME:\n${fileName}\n\n` +
-            `📝 FILE FORMAT: Plain Text (.txt)\n` +
-            `✅ Opens in ANY app - TextEdit, Notes, even Notepad!\n` +
-            `✅ No special application needed!\n\n` +
-            `📍 EXACT LOCATION ON YOUR MACBOOK:\n` +
-            `/Users/amremad/Downloads/${fileName}\n\n` +
-            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-            `🔍 HOW TO FIND IT RIGHT NOW (3 EASY STEPS):\n\n` +
-            `STEP 1: Open Finder (click blue face icon in Dock)\n\n` +
-            `STEP 2: Press these 3 keys together:\n` +
-            `       ⌘ (Command) + Shift + D\n\n` +
-            `STEP 3: Downloads folder opens - YOUR FILE IS THERE!\n` +
-            `       Look for: ${fileName}\n\n` +
-            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-            `💡 TO OPEN THE FILE:\n\n` +
-            `• Double-click the file - opens in TextEdit!\n` +
-            `• Or right-click → Open With → Choose any app\n` +
-            `• Or drag to Notes app\n` +
-            `• Works with ANY text editor!\n\n` +
-            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-            `✅ YOUR FILE IS ON YOUR MACBOOK - NOT ON GITHUB!\n` +
-            `✅ It's a plain text file - opens anywhere!\n` +
-            `✅ You can read it, edit it, or share it!\n\n` +
-            `🕐 Saved at: ${new Date(fileInfo.savedAt).toLocaleString()}`;
-    
-    alert(message);
-    
-    // Also log detailed info
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('✅ FILE SAVED TO YOUR MACBOOK!');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('📄 File Name:', fileName);
-    console.log('📍 Location: ~/Downloads/' + fileName);
-    console.log('📍 Full Path: /Users/amremad/Downloads/' + fileName);
-    console.log('💾 File Size:', (fileInfo.fileSize / 1024).toFixed(2), 'KB');
-    console.log('🕐 Saved:', new Date(fileInfo.savedAt).toLocaleString());
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('🔍 TO FIND: Open Finder → Press ⌘ + Shift + D');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-}
-
-// Open Downloads folder on Mac
-function openDownloadsFolder() {
-    // Try to open Finder to Downloads folder
-    // Note: This requires a special protocol or file:// URL
-    
-    const downloadsPath = '/Users/' + (navigator.userAgent.includes('Mac') ? 'amremad' : 'user') + '/Downloads';
-    
-    // Create instructions
-    const instructions = `📂 TO OPEN DOWNLOADS FOLDER:\n\n` +
-        `Method 1 (Easiest):\n` +
-        `1. Press ⌘ + Shift + D (Opens Downloads in Finder)\n\n` +
-        `Method 2:\n` +
-        `1. Open Finder\n` +
-        `2. Press ⌘ + Shift + G\n` +
-        `3. Type: ~/Downloads\n` +
-        `4. Press Enter\n\n` +
-        `Method 3:\n` +
-        `1. Click Finder in Dock\n` +
-        `2. Click "Downloads" in sidebar\n\n` +
-        `Your file is saved as: ` + (JSON.parse(localStorage.getItem('resumebuilder_last_saved_file') || '{}').fileName || 'resume.json');
-    
-    alert(instructions);
-    
-    // Try to create a file:// URL (may not work in all browsers due to security)
-    try {
-        // This won't work due to browser security, but we can show the path
-        console.log('Downloads path:', downloadsPath);
-    } catch (e) {
-        console.log('Cannot open folder directly due to browser security');
-    }
-}
-
-// Show saved files location
-function showSavedFilesLocation() {
-    const lastFile = JSON.parse(localStorage.getItem('resumebuilder_last_saved_file') || '{}');
-    const allFiles = JSON.parse(localStorage.getItem('resumebuilder_saved_files_list') || '[]');
-    
-    if (!lastFile.fileName && allFiles.length === 0) {
-        alert('❌ No files saved yet!\n\nPlease:\n1. Create a resume\n2. Click "Save to Downloads Folder"\n3. The file will download to your MacBook!');
-        return;
-    }
-    
-    let message = `📁 YOUR SAVED RESUME FILES ON YOUR MACBOOK\n\n` +
-        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-        `✅ IMPORTANT: Files are saved on YOUR MACBOOK, NOT on GitHub!\n` +
-        `✅ GitHub only hosts the web app code, not your data!\n\n` +
-        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
-    
-    if (lastFile.fileName) {
-        message += `📄 LAST SAVED FILE:\n\n` +
-            `File Name: ${lastFile.fileName}\n` +
-            `📍 Location: ~/Downloads/${lastFile.fileName}\n` +
-            `📂 Full Path: /Users/amremad/Downloads/${lastFile.fileName}\n` +
-            `🕐 Saved: ${new Date(lastFile.savedAt).toLocaleString()}\n\n`;
-    }
-    
-    if (allFiles.length > 0) {
-        message += `📋 TOTAL FILES SAVED: ${allFiles.length}\n\n`;
-    }
-    
-    message += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-        `🔍 HOW TO FIND YOUR FILES (EASIEST WAY):\n\n` +
-        `STEP 1: Open Finder (blue face icon in Dock)\n\n` +
-        `STEP 2: Press these 3 keys together:\n` +
-        `       ⌘ (Command) + Shift + D\n\n` +
-        `STEP 3: Downloads folder opens!\n` +
-        `       Your files are there - look for .json files\n\n` +
-        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-        `💡 TIP: Sort by "Date Modified" to see newest first!`;
-    
-    alert(message);
-    
-    // Copy path to clipboard
-    if (lastFile.fileName) {
-        const path = '~/Downloads/' + lastFile.fileName;
-        navigator.clipboard.writeText(path).then(() => {
-            console.log('Path copied to clipboard:', path);
-        });
-    }
-}
-
-// List all saved files
-function listAllSavedFiles() {
-    const allFiles = JSON.parse(localStorage.getItem('resumebuilder_saved_files_list') || '[]');
-    
-    if (allFiles.length === 0) {
-        alert('No files saved yet!\n\nClick "Save to Downloads Folder" to save your resume to your MacBook.');
-        return;
-    }
-    
-    let message = `📋 ALL FILES SAVED ON YOUR MACBOOK\n\n` +
-        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-        `Total Files: ${allFiles.length}\n\n` +
-        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
-    
-    // Sort by date (newest first)
-    allFiles.sort((a, b) => new Date(b.savedAt) - new Date(a.savedAt));
-    
-    allFiles.forEach((file, index) => {
-        message += `${index + 1}. ${file.fileName}\n`;
-        message += `   📍 ~/Downloads/${file.fileName}\n`;
-        message += `   🕐 ${new Date(file.savedAt).toLocaleString()}\n\n`;
-    });
-    
-    message += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-        `🔍 TO FIND THESE FILES:\n` +
-        `1. Open Finder\n` +
-        `2. Press ⌘ + Shift + D\n` +
-        `3. All your .json files are there!`;
-    
-    alert(message);
-    
-    // Also log to console
-    console.log('📋 All saved files:', allFiles);
-    allFiles.forEach((file, index) => {
-        console.log(`${index + 1}. ${file.fileName} - ${file.filePath}`);
-    });
-}
-
-// Find my files - step by step guide
-function findMyFilesNow() {
-    const lastFile = JSON.parse(localStorage.getItem('resumebuilder_last_saved_file') || '{}');
-    const allFiles = JSON.parse(localStorage.getItem('resumebuilder_saved_files_list') || '[]');
-    
-    let message = '🔍 LET\'S FIND YOUR FILES TOGETHER - STEP BY STEP!\n\n';
-    message += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
-    
-    if (allFiles.length === 0 && !lastFile.fileName) {
-        message += '❌ NO FILES SAVED YET!\n\n';
-        message += 'To save a file:\n';
-        message += '1. Create or edit your resume\n';
-        message += '2. Click "💾 Save Resume"\n';
-        message += '3. File will download automatically\n';
-        message += '4. Then come back here to find it!\n\n';
-        alert(message);
-        return;
-    }
-    
-    message += '✅ I FOUND YOUR SAVED FILES!\n\n';
-    
-    if (lastFile.fileName) {
-        message += `📄 LAST FILE SAVED:\n${lastFile.fileName}\n\n`;
-    }
-    
-    if (allFiles.length > 0) {
-        message += `📋 TOTAL FILES: ${allFiles.length}\n\n`;
-    }
-    
-    message += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
-    message += '📍 WHERE TO LOOK (3 EASY STEPS):\n\n';
-    message += 'STEP 1: Open Finder\n';
-    message += '   → Click the blue face icon in your Dock\n';
-    message += '   → (It\'s usually at the bottom of your screen)\n\n';
-    message += 'STEP 2: Open Downloads Folder\n';
-    message += '   → Press these 3 keys TOGETHER:\n';
-    message += '   → ⌘ (Command) + Shift + D\n';
-    message += '   → Downloads folder will open!\n\n';
-    message += 'STEP 3: Look for Your Files\n';
-    message += '   → Look for files starting with: RESUME_\n';
-    message += '   → Or files ending with: .txt\n';
-    message += '   → Sort by "Date Modified" (newest first)\n\n';
-    
-    if (lastFile.fileName) {
-        message += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
-        message += `🔍 LOOK FOR THIS EXACT FILE:\n\n`;
-        message += `${lastFile.fileName}\n\n`;
-    }
-    
-    message += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
-    message += '💡 STILL CAN\'T FIND IT? TRY THIS:\n\n';
-    message += 'Method 1: Search Your Mac\n';
-    message += '   1. Press ⌘ + Space (Spotlight search)\n';
-    message += '   2. Type: RESUME\n';
-    message += '   3. Press Enter\n';
-    message += '   4. All your resume files will show!\n\n';
-    message += 'Method 2: Check Browser Downloads\n';
-    message += '   Chrome: Press ⌘ + Shift + J\n';
-    message += '   Safari: Press ⌘ + Option + L\n';
-    message += '   Click on any file to show in Finder\n\n';
-    message += 'Method 3: Check Desktop\n';
-    message += '   Sometimes files save to Desktop instead\n';
-    message += '   Look on your Desktop for .txt files\n\n';
-    message += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
-    message += '📂 EXACT PATH ON YOUR MACBOOK:\n\n';
-    message += '/Users/amremad/Downloads/\n\n';
-    message += 'Or in Finder:\n';
-    message += '1. Press ⌘ + Shift + G\n';
-    message += '2. Type: ~/Downloads\n';
-    message += '3. Press Enter\n';
-    message += '4. Your files are there!\n\n';
-    message += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
-    message += '😊 Don\'t worry - your files ARE there!\n';
-    message += 'We just need to find them together! 💪';
-    
-    alert(message);
-    
-    // Also log to console
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('🔍 FINDING YOUR FILES...');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('Last saved file:', lastFile);
-    console.log('All saved files:', allFiles.length);
-    console.log('\n📍 EXACT LOCATION:');
-    console.log('~/Downloads/');
-    console.log('/Users/amremad/Downloads/');
-    console.log('\n🔍 TO OPEN:');
-    console.log('1. Open Finder');
-    console.log('2. Press ⌘ + Shift + D');
-    console.log('3. Or press ⌘ + Shift + G and type: ~/Downloads');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-}
-
-// Test file download to see where it goes
-function testFileDownload() {
-    alert('🧪 FILE DOWNLOAD TEST\n\n' +
-        'I\'m going to create a test file so we can see EXACTLY where it downloads!\n\n' +
-        'Watch the bottom of your browser - you\'ll see the download!\n\n' +
-        'Then we\'ll find it together!');
-    
-    // Create a simple test file as PLAIN TEXT (opens in any app!)
-    const testContent = `═══════════════════════════════════════════════════════════════
-                    TEST FILE - FIND YOUR DOWNLOADS FOLDER
-═══════════════════════════════════════════════════════════════
-
-This is a test file to find your Downloads folder!
-
-If you can see this file, your Downloads folder is working perfectly!
-
-Created: ${new Date().toLocaleString()}
-
-Instructions:
-1. This file is saved as PLAIN TEXT (.txt)
-2. It opens in ANY app - TextEdit, Notes, even Notepad!
-3. No special application needed!
-4. Your resume files are saved the same way!
-
-Location: ~/Downloads/
-
-═══════════════════════════════════════════════════════════════`;
-    
-    const fileName = `TEST_FIND_MY_FILES_${new Date().getTime()}.txt`;
-    
-    // Download the test file as plain text
-    const blob = new Blob([testContent], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = fileName;
-    link.style.display = 'none';
-    document.body.appendChild(link);
-    link.click();
-    
-    setTimeout(() => {
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
-        
-        // Show instructions
-        setTimeout(() => {
-            const instructions = `✅ TEST FILE DOWNLOADED!\n\n` +
-                `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-                `📄 File Name: ${fileName}\n` +
-                `📝 Format: Plain Text (.txt)\n` +
-                `✅ Opens in ANY app - TextEdit, Notes, etc!\n\n` +
-                `🔍 DID YOU SEE IT DOWNLOAD?\n` +
-                `Look at the bottom of your browser - did you see a download?\n\n` +
-                `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-                `📍 NOW LET'S FIND IT:\n\n` +
-                `STEP 1: Check browser Downloads bar\n` +
-                `- Look at the bottom of your browser\n` +
-                `- You should see the file downloading\n` +
-                `- Click on it to open the folder!\n\n` +
-                `STEP 2: If you don't see it, open Finder:\n` +
-                `- Press ⌘ + Shift + D\n` +
-                `- Look for: ${fileName}\n` +
-                `- Double-click to open in TextEdit!\n\n` +
-                `STEP 3: Check browser Downloads:\n` +
-                `- Chrome: Press ⌘ + Shift + J\n` +
-                `- Safari: Press ⌘ + Option + L\n` +
-                `- Click on the file to show in Finder\n\n` +
-                `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-                `💡 Once you find this test file, your resume files are in the SAME place!\n` +
-                `💡 All files are saved as .txt - open in ANY text editor!`;
-            
-            alert(instructions);
-        }, 500);
-    }, 100);
-}
-
-// Load resume from file
-function loadResumeFromFile() {
-    if (!currentUser) {
-        alert('Please login first!');
-        return;
-    }
-    
-    // Trigger file input - accept both .txt and .json
-    const fileInput = document.getElementById('fileInput');
-    fileInput.accept = '.txt,.json';
-    fileInput.click();
-}
-
-// Handle file load
-function handleFileLoad(event) {
-    const file = event.target.files[0];
-    if (!file) return;
-    
-    const reader = new FileReader();
-    
-    reader.onload = function(e) {
-        try {
-            const fileContent = e.target.result;
-            let resumeData;
-            
-            // Try to parse as JSON first (for old .json files)
-            if (file.name.endsWith('.json')) {
-                resumeData = JSON.parse(fileContent);
-            } else {
-                // For .txt files, we can't easily parse back, so show message
-                alert('📝 Text files (.txt) are for reading only.\n\n' +
-                    'To load a resume, please:\n' +
-                    '1. Use the web app to create/edit your resume\n' +
-                    '2. Or load from a .json file (if you have one)\n\n' +
-                    'The .txt files are saved for easy reading and sharing!');
-                event.target.value = '';
-                return;
-            }
-            
-            // Validate resume data
-            if (!resumeData.name && !resumeData.email) {
-                throw new Error('Invalid resume file format');
-            }
-            
-            // Confirm load
-            const confirmMsg = `Load resume for "${resumeData.name || 'Unknown'}"?\n\nThis will replace your current resume data.`;
-            if (!confirm(confirmMsg)) {
-                return;
-            }
-            
-            // Update resume data
-            const resume = {
-                id: Date.now(),
-                userId: currentUser.id,
-                name: resumeData.name || '',
-                email: resumeData.email || '',
-                phone: resumeData.phone || '',
-                address: resumeData.address || '',
-                skills: resumeData.skills || [],
-                experiences: resumeData.experiences || [],
-                education: resumeData.education || [],
-                lastUpdated: new Date().toISOString()
-            };
-            
-            // Save to localStorage
-            const resumes = getResumes();
-            const existingIndex = resumes.findIndex(r => r.userId === currentUser.id);
-            
-            if (existingIndex >= 0) {
-                resume.id = resumes[existingIndex].id;
-                resumes[existingIndex] = resume;
-            } else {
-                resumes.push(resume);
-            }
-            
-            localStorage.setItem(STORAGE_KEY_RESUMES, JSON.stringify(resumes));
-            currentResume = resume;
-            
-            alert('✅ Resume loaded successfully!\n\nYou can now view or edit it.');
-            
-            // Go to resume form to see loaded data
-            showScreen('resumeFormScreen');
-            
-        } catch (error) {
-            console.error('Error loading file:', error);
-            alert('❌ Error loading file:\n\n' + error.message + '\n\nNote: .txt files are for reading only. To load a resume, use a .json file or create a new one in the app.');
-        }
-    };
-    
-    reader.onerror = function() {
-        alert('❌ Error reading file. Please try again.');
-    };
-    
-    reader.readAsText(file);
-    
-    // Reset file input
-    event.target.value = '';
-}
-
-// Update file location display
-function updateFileLocation(fileInfo = null) {
-    const locationEl = document.getElementById('fileLocation');
-    if (!locationEl) return;
-    
-    if (fileInfo) {
-        // Show specific file location
-        locationEl.textContent = `~/Downloads/${fileInfo.fileName}`;
-        locationEl.title = `Full path: /Users/amremad/Downloads/${fileInfo.fileName}`;
-    } else {
-        // Show last saved file or default
-        const lastFile = JSON.parse(localStorage.getItem('resumebuilder_last_saved_file') || '{}');
-        if (lastFile.fileName) {
-            locationEl.textContent = `~/Downloads/${lastFile.fileName}`;
-            locationEl.title = `Full path: /Users/amremad/Downloads/${lastFile.fileName}`;
-        } else {
-            locationEl.textContent = '~/Downloads/saved_resumes/';
-            locationEl.title = 'Files will be saved here';
-        }
-    }
-}
-
-// Copy file location to clipboard
-function copyFileLocation() {
-    const lastFile = JSON.parse(localStorage.getItem('resumebuilder_last_saved_file') || '{}');
-    let location;
-    
-    if (lastFile.fileName) {
-        location = '~/Downloads/' + lastFile.fileName;
-    } else {
-        location = '~/Downloads/saved_resumes/';
-    }
-    
-    navigator.clipboard.writeText(location).then(() => {
-        alert('✅ Path copied to clipboard!\n\n' + location + '\n\nYou can paste it in Finder (⌘ + Shift + G)');
-    }).catch(() => {
-        prompt('Copy this path:', location);
-    });
-}
-
-// Help user find their files
-function helpFindFiles() {
-    const lastFile = JSON.parse(localStorage.getItem('resumebuilder_last_saved_file') || '{}');
-    const allFiles = JSON.parse(localStorage.getItem('resumebuilder_saved_files_list') || '[]');
-    const resumes = getResumes();
-    const hasResume = resumes && resumes.length > 0;
-    
-    let message = '🔍 LET\'S FIND YOUR FILES TOGETHER!\n\n';
-    message += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
-    message += '✅ IMPORTANT: Your files are saved on YOUR MACBOOK!\n';
-    message += '✅ NOT on GitHub - GitHub only has the web app code!\n';
-    message += '✅ Your data is safe on your computer!\n\n';
-    message += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
-    
-    if (lastFile.fileName) {
-        message += '✅ I FOUND YOUR LAST SAVED FILE!\n\n';
-        message += `📄 File Name: ${lastFile.fileName}\n`;
-        message += `📍 Location: ~/Downloads/${lastFile.fileName}\n`;
-        message += `📂 Full Path: /Users/amremad/Downloads/${lastFile.fileName}\n`;
-        message += `🕐 Saved: ${new Date(lastFile.savedAt).toLocaleString()}\n\n`;
-        message += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
-    }
-    
-    if (allFiles.length > 0) {
-        message += `📋 Total Files Saved: ${allFiles.length}\n\n`;
-    }
-    
-    message += '📂 STEP-BY-STEP INSTRUCTIONS:\n\n';
-    message += 'Method 1 (EASIEST - 3 steps):\n';
-    message += '1. Open Finder (blue face icon in Dock)\n';
-    message += '2. Press ⌘ + Shift + D\n';
-    message += '3. Look for: ' + (lastFile.fileName || 'RESUME_*.json files') + '\n\n';
-    
-    message += 'Method 2 (Using Sidebar):\n';
-    message += '1. Open Finder\n';
-    message += '2. Click "Downloads" in left sidebar\n';
-    message += '3. Your files are there!\n\n';
-    
-    message += 'Method 3 (Search):\n';
-    message += '1. Open Finder\n';
-    message += '2. Press ⌘ + F (search)\n';
-    message += '3. Type: .json\n';
-    message += '4. All your resume files will appear!\n\n';
-    
-    message += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
-    
-    message += '💡 YOUR DATA IS SAFE IN 2 PLACES!\n\n';
-    
-    if (hasResume) {
-        message += '✅ 1. In your Downloads folder (as .json files)\n';
-        message += '✅ 2. In your browser (localStorage)\n\n';
-    }
-    
-    message += '🔧 STILL CAN\'T FIND IT?\n\n';
-    message += '1. Check browser Downloads:\n';
-    message += '   - Chrome: Press ⌘ + Shift + J\n';
-    message += '   - Safari: Press ⌘ + Option + L\n';
-    message += '   - Look at the Downloads list\n\n';
-    
-    message += '2. Search your entire Mac:\n';
-    message += '   - Press ⌘ + Space (Spotlight)\n';
-    message += '   - Type: RESUME\n';
-    message += '   - Press Enter\n\n';
-    
-    message += '3. Your data is ALSO in the browser:\n';
-    message += '   - Press F12 in the web app\n';
-    message += '   - Go to Application → Local Storage\n';
-    message += '   - Your data is there!\n\n';
-    
-    message += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
-    message += '😊 Don\'t worry! Your files ARE on your MacBook!\n';
-    message += 'We\'ll find them together! 💪';
-    
-    alert(message);
-    
-    // Also show in console
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('🔍 FILE LOCATION HELP');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('Last saved file:', lastFile);
-    console.log('All saved files:', allFiles.length);
-    console.log('Downloads path: ~/Downloads/');
-    console.log('Full path: /Users/amremad/Downloads/');
-    if (lastFile.fileName) {
-        console.log('Your file:', lastFile.fileName);
-        console.log('Complete path: ~/Downloads/' + lastFile.fileName);
-    }
-    console.log('\nTo open Downloads folder:');
-    console.log('1. Open Finder');
-    console.log('2. Press ⌘ + Shift + D');
-    console.log('3. Or press ⌘ + Shift + G and type: ~/Downloads');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-}
-
-// Test save functionality (for debugging)
-function testSave() {
-    console.log('=== TEST SAVE ===');
-    console.log('Current user:', currentUser);
-    console.log('localStorage available:', typeof(Storage) !== "undefined");
-    
-    if (!currentUser) {
-        alert('❌ No user logged in!\n\nPlease login first.');
-        return;
-    }
-    
-    // Check if we can read/write localStorage
-    try {
-        const testKey = 'resumebuilder_test';
-        localStorage.setItem(testKey, 'test');
-        const testValue = localStorage.getItem(testKey);
-        localStorage.removeItem(testKey);
-        
-        if (testValue !== 'test') {
-            throw new Error('localStorage write/read test failed');
-        }
-        
-        console.log('✅ localStorage is working');
-        
-        // Check existing resumes
-        const resumes = getResumes();
-        console.log('Existing resumes:', resumes);
-        const userResume = resumes.find(r => r.userId === currentUser.id);
-        
-        if (userResume) {
-            alert(`✅ Resume found!\n\nName: ${userResume.name}\nEmail: ${userResume.email}\n\nYou can preview it now.`);
-        } else {
-            alert('ℹ️ No resume saved yet.\n\nFill in the form and click "Save Resume" to create one.');
-        }
-    } catch (error) {
-        console.error('localStorage test failed:', error);
-        alert('❌ localStorage is not working!\n\nError: ' + error.message + '\n\nPlease check your browser settings.');
-    }
-}
-
-// View where data is stored
-function viewDataStorage() {
-    if (!currentUser) {
-        alert('Please login first!');
-        return;
-    }
-    
-    const users = getUsers();
-    const resumes = getResumes();
-    const userResume = resumes.find(r => r.userId === currentUser.id);
-    const autoSave = loadAutoSave();
-    
-    let message = '📦 DATA STORAGE LOCATION\n\n';
-    message += 'All data is saved in your browser\'s localStorage.\n\n';
-    message += '📍 Storage Location:\n';
-    message += 'Browser → Local Storage → ' + window.location.origin + '\n\n';
-    message += '📊 Your Data:\n';
-    message += `• Users: ${users.length}\n`;
-    message += `• Resumes: ${resumes.length}\n`;
-    message += `• Your Resume: ${userResume ? '✅ Saved' : '❌ Not saved'}\n`;
-    message += `• Auto-save Draft: ${autoSave ? '✅ Exists' : '❌ None'}\n\n`;
-    message += '🔍 How to View:\n';
-    message += '1. Press F12 (Developer Tools)\n';
-    message += '2. Go to "Application" tab\n';
-    message += '3. Click "Local Storage"\n';
-    message += '4. Click your website URL\n\n';
-    message += '💡 Storage Keys:\n';
-    message += '• resumebuilder_users\n';
-    message += '• resumebuilder_resumes\n';
-    message += '• resumebuilder_autosave_' + currentUser.id + '\n';
-    
-    alert(message);
-    
-    // Also log to console
-    console.log('=== DATA STORAGE INFO ===');
-    console.log('Storage Location: Browser localStorage');
-    console.log('Website:', window.location.origin);
-    console.log('Users:', users);
-    console.log('Resumes:', resumes);
-    console.log('Your Resume:', userResume);
-    console.log('Auto-save Draft:', autoSave);
-    console.log('\nTo view in browser:');
-    console.log('F12 → Application → Local Storage →', window.location.origin);
+// Export resume (general function)
+function exportResume() {
+    showScreen('exportScreen');
 }

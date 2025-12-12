@@ -37,52 +37,7 @@
                 <button type="submit" class="btn btn-primary">Sign In</button>
             </form>
             
-            <p class="link-text">
-                Don't have an account? <a href="#" id="showSignup">Sign Up</a><br>
-                <a href="#" id="showForgotPassword" style="margin-top: 10px; display: inline-block;">Forgot Password?</a>
-            </p>
-        </div>
-    </div>
-
-    <!-- Forgot Password Screen -->
-    <div id="forgotPasswordScreen" class="screen">
-        <div class="container">
-            <div class="logo">
-                <div class="logo-circle">CV</div>
-            </div>
-            <h1>Reset Password</h1>
-            <p class="subtitle">Enter your email and new password</p>
-            
-            <form id="forgotPasswordForm" class="form">
-                <div class="input-group">
-                    <label>Email Address</label>
-                    <input type="email" id="forgotEmail" placeholder="Enter your email" required>
-                </div>
-                <div class="input-group">
-                    <label>New Password</label>
-                    <input type="password" id="forgotNewPassword" placeholder="Enter new password" required minlength="6">
-                </div>
-                <div class="input-group">
-                    <label>Confirm New Password</label>
-                    <input type="password" id="forgotConfirmPassword" placeholder="Confirm new password" required minlength="6">
-                </div>
-                <button type="submit" class="btn btn-primary">Reset Password</button>
-            </form>
-            
-            <p class="link-text">Remember your password? <a href="#" id="showLoginFromForgot">Sign In</a></p>
-        </div>
-    </div>
-
-    <!-- Public User Resume Page -->
-    <div id="publicResumeScreen" class="screen">
-        <div class="header">
-            <h2 id="publicUserName">Resume</h2>
-            <button onclick="window.location.href='./'" class="btn-icon">🏠 Home</button>
-        </div>
-        <div class="container">
-            <div id="publicResumeContent" class="resume-preview">
-                <p class="empty-state">Loading resume...</p>
-            </div>
+            <p class="link-text">Don't have an account? <a href="#" id="showSignup">Sign Up</a></p>
         </div>
     </div>
 
@@ -98,19 +53,19 @@
             <form id="signupForm" class="form">
                 <div class="input-group">
                     <label>Full Name</label>
-                    <input type="text" id="signupName" placeholder="Enter your full name" required>
+                    <input type="text" id="signupName" placeholder="Enter your full name" required autocomplete="name">
                 </div>
                 <div class="input-group">
                     <label>Username</label>
-                    <input type="text" id="signupUsername" placeholder="Choose a username" required>
+                    <input type="text" id="signupUsername" placeholder="Choose a username" required autocomplete="username">
                 </div>
                 <div class="input-group">
                     <label>Email Address</label>
-                    <input type="email" id="signupEmail" placeholder="Enter your email" required>
+                    <input type="email" id="signupEmail" placeholder="Enter your email" required autocomplete="email">
                 </div>
                 <div class="input-group">
                     <label>Password</label>
-                    <input type="password" id="signupPassword" placeholder="Create a password" required>
+                    <input type="password" id="signupPassword" placeholder="Create a password (min 6 characters)" required autocomplete="new-password" minlength="6">
                 </div>
                 <button type="submit" class="btn btn-primary">Sign Up</button>
             </form>
@@ -164,24 +119,11 @@
                     <p>Download as PDF or Word</p>
                 </div>
                 
-                
                 <div class="card" onclick="showScreen('qrCodeScreen')">
                     <div class="card-icon">📱</div>
                     <h3>QR Code</h3>
                     <p>Generate QR code for your resume</p>
                 </div>
-                
-                <div class="card" onclick="showPublicResumePage()">
-                    <div class="card-icon">🌐</div>
-                    <h3>My Public Page</h3>
-                    <p>View and share your public resume</p>
-                </div>
-            </div>
-            
-            <div style="margin-top: 30px; text-align: center;">
-                <button onclick="sharePublicResume()" class="btn btn-secondary" style="max-width: 300px; margin: 0 auto;">
-                    🔗 Share My Resume
-                </button>
             </div>
         </div>
     </div>
@@ -191,7 +133,7 @@
         <div class="header">
             <button onclick="showScreen('dashboardScreen')" class="btn-back">← Back</button>
             <h2>Create Resume</h2>
-            <div id="autoSaveStatus" class="auto-save-status"></div>
+            <div></div>
         </div>
         
         <div class="container form-container">
@@ -236,12 +178,12 @@
                     <button type="button" class="btn btn-secondary" onclick="addEducation()">+ Add Education</button>
                 </section>
 
-                <button type="submit" class="btn btn-primary btn-large">💾 Save Resume to Finder</button>
+                <button type="submit" class="btn btn-primary btn-large">💾 Save Resume to saved_resumes Folder</button>
                 <div style="margin-top: 15px; padding: 15px; background: var(--bg-card); border-radius: 10px; border-left: 4px solid var(--success);">
                     <p style="margin: 0; font-size: 13px; line-height: 1.6;">
-                        ✅ <strong>Files save automatically to Finder!</strong><br>
-                        📍 <strong>Location:</strong> Downloads folder<br>
-                        💡 <strong>To find:</strong> Open Finder → Press ⌘ + Shift + D<br>
+                        ✅ <strong>Saves as .txt file to saved_resumes folder!</strong><br>
+                        📍 <strong>Location:</strong> ~/Desktop/AmrEmadResumeBuilder 3/saved_resumes/<br>
+                        💡 <strong>First time:</strong> You'll be asked to select the saved_resumes folder<br>
                         📝 <strong>Format:</strong> Plain text (.txt) - Opens in TextEdit!
                     </p>
                 </div>
@@ -360,10 +302,6 @@
             </div>
         </div>
     </div>
-
-
-    <!-- Hidden file input for loading files -->
-    <input type="file" id="fileInput" accept=".txt,.json" style="display: none;" onchange="handleFileLoad(event)">
 
     <script src="app.js"></script>
 </body>

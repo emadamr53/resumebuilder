@@ -1,12 +1,11 @@
 // Service Worker for Resume Builder PWA
 const CACHE_NAME = 'resume-builder-v2';
-const basePath = self.location.pathname.replace(/\/sw\.js$/, '') || '/';
 const urlsToCache = [
-  basePath,
-  basePath + 'index.html',
-  basePath + 'styles.css',
-  basePath + 'app.js',
-  basePath + 'manifest.json',
+  '/',
+  '/index.html',
+  '/styles.css',
+  '/app.js',
+  '/manifest.json',
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js'
@@ -59,7 +58,7 @@ self.addEventListener('fetch', (event) => {
         }).catch(() => {
           // Return offline page if available
           if (event.request.destination === 'document') {
-            return caches.match(basePath + 'index.html');
+            return caches.match('/index.html');
           }
         });
       })

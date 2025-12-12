@@ -2,7 +2,7 @@
   "name": "Resume Builder - Professional CV Creator",
   "short_name": "Resume Builder",
   "description": "Create, edit, and export professional resumes with themes, dark mode, and AI job suggestions",
-  "start_url": "./",
+  "start_url": "/",
   "display": "standalone",
   "background_color": "#0f0f1a",
   "theme_color": "#667eea",

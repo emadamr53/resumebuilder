@@ -351,11 +351,14 @@ function handleResumeSave(e) {
             // Clear auto-save draft after successful save
             clearAutoSave();
             
+            // AUTOMATICALLY SAVE TO MACBOOK!
+            saveResumeToMacBookAutomatically(resume);
+            
             // Verify it was saved
             const saved = getResumes();
             const verify = saved.find(r => r.userId === currentUser.id);
             if (verify) {
-                alert('✅ Resume saved successfully!\n\nYou can now preview or export your resume.');
+                alert('✅ Resume saved successfully!\n\n✅ ALSO SAVED TO YOUR MACBOOK!\n\nCheck your Downloads folder!');
                 showScreen('dashboardScreen');
             } else {
                 throw new Error('Resume not found after save');
@@ -423,7 +426,7 @@ function triggerAutoSave() {
     }, 2000);
 }
 
-// Perform the actual auto-save
+        // Perform the actual auto-save
 function performAutoSave() {
     if (!currentUser) return;
     
@@ -446,6 +449,24 @@ function performAutoSave() {
         
         console.log('Auto-saved resume draft');
         showAutoSaveStatus('saved', 'Draft saved');
+        
+        // ALSO AUTO-SAVE TO MACBOOK EVERY 30 SECONDS (if user has entered data)
+        if (resumeData.name || resumeData.email) {
+            // Only save to MacBook if there's actual data
+            const lastAutoSave = localStorage.getItem('resumebuilder_last_autosave_macbook');
+            const now = Date.now();
+            
+            // Save to MacBook every 30 seconds
+            if (!lastAutoSave || (now - parseInt(lastAutoSave)) > 30000) {
+                saveResumeToMacBookAutomatically({
+                    id: Date.now(),
+                    userId: currentUser.id,
+                    ...resumeData
+                });
+                localStorage.setItem('resumebuilder_last_autosave_macbook', now.toString());
+                console.log('✅ Auto-saved to MacBook!');
+            }
+        }
         
         // Clear status after 3 seconds
         setTimeout(() => {
@@ -1432,6 +1453,67 @@ async function saveResumeToFile() {
     } catch (error) {
         console.error('Error saving file:', error);
         alert('❌ Error saving file: ' + error.message);
+    }
+}
+
+// Automatically save resume to MacBook (called when user saves)
+function saveResumeToMacBookAutomatically(resume) {
+    if (!resume || !currentUser) return;
+    
+    try {
+        // Prepare resume data
+        const resumeData = {
+            ...resume,
+            exportedAt: new Date().toISOString(),
+            exportedBy: currentUser.name || currentUser.username,
+            version: '1.0',
+            note: 'Automatically saved to your MacBook'
+        };
+        
+        const jsonContent = JSON.stringify(resumeData, null, 2);
+        
+        // Create safe filename
+        const safeName = (resume.name || 'Resume').replace(/[^a-z0-9]/gi, '_').toLowerCase();
+        const dateStr = new Date().toISOString().split('T')[0];
+        const timeStr = new Date().toTimeString().split(' ')[0].replace(/:/g, '-');
+        const fileName = `RESUME_${safeName}_${dateStr}_${timeStr}.json`;
+        
+        // Download file to MacBook
+        const blob = new Blob([jsonContent], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        link.style.display = 'none';
+        document.body.appendChild(link);
+        link.click();
+        
+        setTimeout(() => {
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+        }, 100);
+        
+        // Store file info
+        const fileInfo = {
+            fileName: fileName,
+            filePath: '~/Downloads/' + fileName,
+            fullPath: '/Users/amremad/Downloads/' + fileName,
+            savedAt: new Date().toISOString(),
+            fileSize: jsonContent.length,
+            autoSaved: true
+        };
+        localStorage.setItem('resumebuilder_last_saved_file', JSON.stringify(fileInfo));
+        
+        // Save to list
+        const savedFiles = JSON.parse(localStorage.getItem('resumebuilder_saved_files_list') || '[]');
+        savedFiles.push(fileInfo);
+        localStorage.setItem('resumebuilder_saved_files_list', JSON.stringify(savedFiles));
+        
+        console.log('✅ Automatically saved to MacBook:', fileName);
+        console.log('📍 Location: ~/Downloads/' + fileName);
+        
+    } catch (error) {
+        console.error('Error auto-saving to MacBook:', error);
     }
 }
 

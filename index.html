@@ -380,12 +380,15 @@
                 <p class="subtitle">Save your resume as a file on your MacBook in the "saved_resumes" folder</p>
                 
                 <div class="file-actions">
-                    <button onclick="saveResumeToFile()" class="btn btn-primary btn-large">
-                        💾 Save Resume to File
+                    <button onclick="saveResumeToDownloads()" class="btn btn-primary btn-large">
+                        💾 Save Resume to MacBook NOW
                     </button>
-                    <button onclick="saveResumeToDownloads()" class="btn btn-secondary btn-large">
-                        📥 Save to Downloads Folder
-                    </button>
+                    <div style="margin-top: 15px; padding: 15px; background: var(--bg-card); border-radius: 10px; border-left: 4px solid var(--success);">
+                        <p style="margin: 0; font-size: 13px; line-height: 1.6;">
+                            ✅ <strong>GOOD NEWS!</strong> Your resume is automatically saved to your MacBook every time you click "Save Resume"!<br>
+                            📍 Files are saved to: <code>~/Downloads/RESUME_*.json</code>
+                        </p>
+                    </div>
                 </div>
                 
                 <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border);">

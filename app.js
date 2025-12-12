@@ -155,7 +155,7 @@ function showScreen(screenId) {
     } else if (screenId === 'publicResumeScreen') {
         // Public resume page is handled by showPublicResumePage
     } else if (screenId === 'fileManagerScreen') {
-        updateFileLocation();
+        updateFileLocation(); // Load last saved file location
     }
     
     // Debug: Log current state
@@ -1475,15 +1475,94 @@ function saveResumeToDownloads() {
         document.body.removeChild(link);
         URL.revokeObjectURL(url);
         
-        // Update file location display
-        updateFileLocation();
+        // Store file info for later access
+        const fileInfo = {
+            fileName: fileName,
+            filePath: '~/Downloads/' + fileName,
+            fullPath: '/Users/' + (navigator.userAgent.includes('Mac') ? 'amremad' : 'user') + '/Downloads/' + fileName,
+            savedAt: new Date().toISOString()
+        };
+        localStorage.setItem('resumebuilder_last_saved_file', JSON.stringify(fileInfo));
         
-        alert(`✅ Resume saved to Downloads!\n\nFile: ${fileName}\n\nLocation: ~/Downloads/${fileName}\n\nYou can move it to a "saved_resumes" folder if you want.`);
+        // Update file location display
+        updateFileLocation(fileInfo);
+        
+        // Show success message with option to open folder
+        const openFolder = confirm(`✅ Resume saved successfully!\n\nFile: ${fileName}\nLocation: ~/Downloads/\n\nWould you like to open the Downloads folder?`);
+        
+        if (openFolder) {
+            openDownloadsFolder();
+        }
         
     } catch (error) {
         console.error('Error saving to Downloads:', error);
         alert('❌ Error saving file: ' + error.message);
     }
+}
+
+// Open Downloads folder on Mac
+function openDownloadsFolder() {
+    // Try to open Finder to Downloads folder
+    // Note: This requires a special protocol or file:// URL
+    
+    const downloadsPath = '/Users/' + (navigator.userAgent.includes('Mac') ? 'amremad' : 'user') + '/Downloads';
+    
+    // Create instructions
+    const instructions = `📂 TO OPEN DOWNLOADS FOLDER:\n\n` +
+        `Method 1 (Easiest):\n` +
+        `1. Press ⌘ + Shift + D (Opens Downloads in Finder)\n\n` +
+        `Method 2:\n` +
+        `1. Open Finder\n` +
+        `2. Press ⌘ + Shift + G\n` +
+        `3. Type: ~/Downloads\n` +
+        `4. Press Enter\n\n` +
+        `Method 3:\n` +
+        `1. Click Finder in Dock\n` +
+        `2. Click "Downloads" in sidebar\n\n` +
+        `Your file is saved as: ` + (JSON.parse(localStorage.getItem('resumebuilder_last_saved_file') || '{}').fileName || 'resume.json');
+    
+    alert(instructions);
+    
+    // Try to create a file:// URL (may not work in all browsers due to security)
+    try {
+        // This won't work due to browser security, but we can show the path
+        console.log('Downloads path:', downloadsPath);
+    } catch (e) {
+        console.log('Cannot open folder directly due to browser security');
+    }
+}
+
+// Show saved files location
+function showSavedFilesLocation() {
+    const lastFile = JSON.parse(localStorage.getItem('resumebuilder_last_saved_file') || '{}');
+    
+    if (!lastFile.fileName) {
+        alert('No files saved yet. Save a resume first!');
+        return;
+    }
+    
+    const message = `📁 YOUR SAVED RESUME FILES\n\n` +
+        `📍 Location on Your MacBook:\n` +
+        `~/Downloads/${lastFile.fileName}\n\n` +
+        `📂 Full Path:\n` +
+        `/Users/amremad/Downloads/${lastFile.fileName}\n\n` +
+        `🕐 Saved: ${new Date(lastFile.savedAt).toLocaleString()}\n\n` +
+        `💡 HOW TO FIND IT:\n` +
+        `1. Open Finder\n` +
+        `2. Press ⌘ + Shift + D (Opens Downloads)\n` +
+        `3. Look for: ${lastFile.fileName}\n\n` +
+        `Or:\n` +
+        `1. Press ⌘ + Shift + G in Finder\n` +
+        `2. Type: ~/Downloads\n` +
+        `3. Press Enter`;
+    
+    alert(message);
+    
+    // Also copy path to clipboard
+    const path = '~/Downloads/' + lastFile.fileName;
+    navigator.clipboard.writeText(path).then(() => {
+        console.log('Path copied to clipboard');
+    });
 }
 
 // Load resume from file
@@ -1569,19 +1648,40 @@ function handleFileLoad(event) {
 }
 
 // Update file location display
-function updateFileLocation() {
+function updateFileLocation(fileInfo = null) {
     const locationEl = document.getElementById('fileLocation');
-    if (locationEl) {
-        // Show Downloads path
-        locationEl.textContent = '~/Downloads/';
+    if (!locationEl) return;
+    
+    if (fileInfo) {
+        // Show specific file location
+        locationEl.textContent = `~/Downloads/${fileInfo.fileName}`;
+        locationEl.title = `Full path: /Users/amremad/Downloads/${fileInfo.fileName}`;
+    } else {
+        // Show last saved file or default
+        const lastFile = JSON.parse(localStorage.getItem('resumebuilder_last_saved_file') || '{}');
+        if (lastFile.fileName) {
+            locationEl.textContent = `~/Downloads/${lastFile.fileName}`;
+            locationEl.title = `Full path: /Users/amremad/Downloads/${lastFile.fileName}`;
+        } else {
+            locationEl.textContent = '~/Downloads/saved_resumes/';
+            locationEl.title = 'Files will be saved here';
+        }
     }
 }
 
 // Copy file location to clipboard
 function copyFileLocation() {
-    const location = '~/Downloads/saved_resumes/';
+    const lastFile = JSON.parse(localStorage.getItem('resumebuilder_last_saved_file') || '{}');
+    let location;
+    
+    if (lastFile.fileName) {
+        location = '~/Downloads/' + lastFile.fileName;
+    } else {
+        location = '~/Downloads/saved_resumes/';
+    }
+    
     navigator.clipboard.writeText(location).then(() => {
-        alert('✅ Path copied to clipboard!\n\n' + location);
+        alert('✅ Path copied to clipboard!\n\n' + location + '\n\nYou can paste it in Finder (⌘ + Shift + G)');
     }).catch(() => {
         prompt('Copy this path:', location);
     });

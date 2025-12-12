@@ -400,17 +400,43 @@
                 </div>
                 
                 <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border);">
-                    <h3>📋 Saved Files Location</h3>
+                    <h3>📋 Find Your Saved Files</h3>
                     <p class="subtitle">Your resumes are saved to:</p>
                     <div class="file-location">
-                        <code id="fileLocation">~/Downloads/saved_resumes/</code>
-                        <button onclick="copyFileLocation()" class="btn btn-secondary" style="margin-left: 10px; padding: 5px 15px;">
+                        <code id="fileLocation">~/Downloads/</code>
+                        <button onclick="copyFileLocation()" class="btn btn-secondary" style="padding: 5px 15px;">
                             📋 Copy Path
                         </button>
                     </div>
-                    <p style="margin-top: 15px; font-size: 12px; color: var(--text-secondary);">
-                        💡 Tip: You can create a "saved_resumes" folder in your Downloads or Documents folder to organize your files.
-                    </p>
+                    
+                    <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button onclick="showSavedFilesLocation()" class="btn btn-primary" style="flex: 1; min-width: 200px;">
+                            📂 Show File Location
+                        </button>
+                        <button onclick="openDownloadsFolder()" class="btn btn-secondary" style="flex: 1; min-width: 200px;">
+                            🗂️ How to Open Downloads
+                        </button>
+                    </div>
+                    
+                    <div style="margin-top: 20px; padding: 15px; background: var(--bg-card); border-radius: 10px; border-left: 4px solid var(--accent-primary);">
+                        <h4 style="margin-bottom: 10px; color: var(--accent-primary);">💡 Quick Guide to Find Files:</h4>
+                        <ol style="margin-left: 20px; line-height: 1.8; font-size: 13px;">
+                            <li><strong>Press ⌘ + Shift + D</strong> in Finder (opens Downloads)</li>
+                            <li>Or open Finder → Click <strong>"Downloads"</strong> in sidebar</li>
+                            <li>Or press <strong>⌘ + Shift + G</strong> → Type: <code>~/Downloads</code></li>
+                            <li>Look for files named: <code>resume_name_2024-11-30.json</code></li>
+                        </ol>
+                    </div>
+                    
+                    <div style="margin-top: 15px; padding: 15px; background: var(--bg-card); border-radius: 10px;">
+                        <h4 style="margin-bottom: 10px;">📁 Organize Your Files:</h4>
+                        <p style="font-size: 13px; line-height: 1.6;">
+                            Create a <strong>"saved_resumes"</strong> folder in Downloads to keep all your resumes organized:<br>
+                            <code style="display: block; margin-top: 8px; padding: 8px; background: var(--bg-secondary); border-radius: 5px;">
+                                ~/Downloads/saved_resumes/
+                            </code>
+                        </p>
+                    </div>
                 </div>
             </div>
         </div>

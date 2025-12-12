@@ -154,9 +154,6 @@ function showScreen(screenId) {
         highlightSelectedTheme();
     } else if (screenId === 'publicResumeScreen') {
         // Public resume page is handled by showPublicResumePage
-    } else if (screenId === 'fileManagerScreen') {
-        updateFileLocation(); // Load last saved file location
-    }
     
     // Debug: Log current state
     if (currentUser) {
@@ -351,7 +348,7 @@ function handleResumeSave(e) {
             // Clear auto-save draft after successful save
             clearAutoSave();
             
-            // AUTOMATICALLY SAVE TO MACBOOK (NO BROWSER INTERACTION NEEDED!)
+            // AUTOMATICALLY SAVE TO FINDER!
             saveResumeToMacBookAutomatically(resume);
             
             // Verify it was saved
@@ -360,10 +357,10 @@ function handleResumeSave(e) {
             if (verify) {
                 const lastFile = JSON.parse(localStorage.getItem('resumebuilder_last_saved_file') || '{}');
                 const fileMsg = lastFile.fileName ? 
-                    `\n\n✅ SAVED TO YOUR MACBOOK!\n📄 File: ${lastFile.fileName}\n📍 Location: ~/Downloads/\n💡 Opens in TextEdit - no browser needed!` : 
-                    `\n\n✅ File is downloading to your MacBook now!\n📍 Check ~/Downloads/ folder`;
+                    `\n\n✅ SAVED TO FINDER!\n📄 File: ${lastFile.fileName}\n📍 Finder → Downloads folder\n💡 Open Finder (⌘ + Shift + D) to see it!` : 
+                    `\n\n✅ File saved to Finder Downloads!`;
                 
-                alert('✅ Resume saved successfully!' + fileMsg);
+                alert('✅ Resume saved!' + fileMsg);
                 showScreen('dashboardScreen');
             } else {
                 throw new Error('Resume not found after save');
@@ -1461,7 +1458,7 @@ async function saveResumeToFile() {
     }
 }
 
-// Automatically save resume to MacBook (called when user saves)
+// Automatically save resume to MacBook Finder (called when user saves)
 async function saveResumeToMacBookAutomatically(resume) {
     if (!resume || !currentUser) return;
     
@@ -1472,66 +1469,21 @@ async function saveResumeToMacBookAutomatically(resume) {
         const timeStr = new Date().toTimeString().split(' ')[0].replace(/:/g, '-');
         
         // Save as READABLE TEXT FILE (opens in any text editor!)
-        const textFileName = `RESUME_${safeName}_${dateStr}_${timeStr}.txt`;
+        const textFileName = `${safeName}_Resume_${dateStr}.txt`;
         const textContent = formatResumeAsText(resume);
         
-        // Try to use File System Access API to save directly to a folder (no browser download prompt)
-        if ('showSaveFilePicker' in window) {
-            try {
-                const fileHandle = await window.showSaveFilePicker({
-                    suggestedName: textFileName,
-                    types: [{
-                        description: 'Text Resume File',
-                        accept: { 'text/plain': ['.txt'] }
-                    }],
-                    startIn: 'downloads' // Start in Downloads folder
-                });
-                
-                const writable = await fileHandle.createWritable();
-                await writable.write(textContent);
-                await writable.close();
-                
-                // Store file info
-                const fileInfo = {
-                    fileName: textFileName,
-                    filePath: '~/Downloads/' + textFileName,
-                    fullPath: '/Users/amremad/Downloads/' + textFileName,
-                    savedAt: new Date().toISOString(),
-                    fileSize: textContent.length,
-                    autoSaved: true,
-                    format: 'TXT (Readable Text)',
-                    savedDirectly: true
-                };
-                localStorage.setItem('resumebuilder_last_saved_file', JSON.stringify(fileInfo));
-                
-                // Save to list
-                const savedFiles = JSON.parse(localStorage.getItem('resumebuilder_saved_files_list') || '[]');
-                savedFiles.push(fileInfo);
-                localStorage.setItem('resumebuilder_saved_files_list', JSON.stringify(savedFiles));
-                
-                console.log('✅ Saved directly to MacBook:', textFileName);
-                return; // Success - file saved directly
-            } catch (err) {
-                if (err.name !== 'AbortError') {
-                    console.log('File System Access API not available, using download method');
-                    // Fall through to download method
-                } else {
-                    return; // User cancelled
-                }
-            }
-        }
-        
-        // Fallback: Download file to MacBook (silent - no browser interaction needed)
+        // SIMPLE: Just download to Finder Downloads folder
+        // This saves directly to: /Users/amremad/Downloads/
         const textBlob = new Blob([textContent], { type: 'text/plain' });
         const textUrl = URL.createObjectURL(textBlob);
         const textLink = document.createElement('a');
         textLink.href = textUrl;
-        textLink.download = textFileName;
+        textLink.download = textFileName; // This saves to Finder Downloads
         textLink.style.display = 'none';
         document.body.appendChild(textLink);
         textLink.click();
         
-        // Remove immediately - file is already downloading
+        // Remove immediately
         setTimeout(() => {
             document.body.removeChild(textLink);
             URL.revokeObjectURL(textUrl);
@@ -1549,18 +1501,12 @@ async function saveResumeToMacBookAutomatically(resume) {
         };
         localStorage.setItem('resumebuilder_last_saved_file', JSON.stringify(fileInfo));
         
-        // Save to list
-        const savedFiles = JSON.parse(localStorage.getItem('resumebuilder_saved_files_list') || '[]');
-        savedFiles.push(fileInfo);
-        localStorage.setItem('resumebuilder_saved_files_list', JSON.stringify(savedFiles));
-        
-        console.log('✅ Automatically saved to MacBook:', textFileName);
-        console.log('📍 Location: ~/Downloads/' + textFileName);
-        console.log('📝 Format: Plain Text (opens in any text editor!)');
-        console.log('💡 File downloads automatically - check Downloads folder!');
+        console.log('✅ Saved to Finder:', textFileName);
+        console.log('📍 Finder Location: ~/Downloads/' + textFileName);
+        console.log('💡 Open Finder → Press ⌘ + Shift + D → Your file is there!');
         
     } catch (error) {
-        console.error('Error auto-saving to MacBook:', error);
+        console.error('Error saving to Finder:', error);
     }
 }
 
@@ -1659,33 +1605,25 @@ function saveResumeToDownloads() {
         const dateStr = new Date().toISOString().split('T')[0];
         const timeStr = new Date().toTimeString().split(' ')[0].replace(/:/g, '-');
         
-        // Save as READABLE TEXT FILE (opens in any app!)
-        const fileName = `RESUME_${safeName}_${dateStr}_${timeStr}.txt`;
+        // Save as READABLE TEXT FILE - SAVES TO FINDER!
+        const fileName = `${safeName}_Resume_${dateStr}.txt`;
         const textContent = formatResumeAsText(resume);
         
-        // Create and download file - THIS SAVES TO YOUR MACBOOK!
+        // Download file - SAVES DIRECTLY TO FINDER DOWNLOADS!
         const blob = new Blob([textContent], { type: 'text/plain' });
         const url = URL.createObjectURL(blob);
         const link = document.createElement('a');
         link.href = url;
-        link.download = fileName; // This triggers download to MacBook
+        link.download = fileName; // Saves to Finder Downloads folder
         link.style.display = 'none';
         document.body.appendChild(link);
-        
-        // Show download notification
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        console.log('📥 DOWNLOADING FILE NOW...');
-        console.log('📄 File:', fileName);
-        console.log('📍 Watch the bottom of your browser!');
-        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-        
         link.click();
         
-        // Wait a moment then remove
+        // Remove immediately
         setTimeout(() => {
             document.body.removeChild(link);
             URL.revokeObjectURL(url);
-        }, 100);
+        }, 50);
         
         // Store file info
         const fileInfo = {
@@ -1698,16 +1636,11 @@ function saveResumeToDownloads() {
         };
         localStorage.setItem('resumebuilder_last_saved_file', JSON.stringify(fileInfo));
         
-        // Save to list of all saved files
-        const savedFiles = JSON.parse(localStorage.getItem('resumebuilder_saved_files_list') || '[]');
-        savedFiles.push(fileInfo);
-        localStorage.setItem('resumebuilder_saved_files_list', JSON.stringify(savedFiles));
+        // Show simple success message
+        alert(`✅ SAVED TO FINDER!\n\n📄 File: ${fileName}\n📍 Location: Downloads folder\n\n💡 To find it:\n1. Open Finder\n2. Press ⌘ + Shift + D\n3. Your file is there!`);
         
-        // Update file location display
-        updateFileLocation(fileInfo);
-        
-        // Show success with BIG CLEAR instructions
-        showFileSavedSuccess(fileName, fileInfo);
+        console.log('✅ Saved to Finder:', fileName);
+        console.log('📍 ~/Downloads/' + fileName);
         
     } catch (error) {
         console.error('Error saving to Downloads:', error);

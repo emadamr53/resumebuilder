@@ -164,11 +164,6 @@
                     <p>Download as PDF or Word</p>
                 </div>
                 
-                <div class="card" onclick="showScreen('fileManagerScreen')">
-                    <div class="card-icon">📁</div>
-                    <h3>File Manager</h3>
-                    <p>Save & load resumes from files</p>
-                </div>
                 
                 <div class="card" onclick="showScreen('qrCodeScreen')">
                     <div class="card-icon">📱</div>
@@ -241,14 +236,14 @@
                     <button type="button" class="btn btn-secondary" onclick="addEducation()">+ Add Education</button>
                 </section>
 
-                <button type="submit" class="btn btn-primary btn-large">💾 Save Resume</button>
-                <div style="margin-top: 15px; text-align: center; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap;">
-                    <button type="button" onclick="testSave()" class="btn btn-secondary" style="max-width: 200px;">
-                        🔍 Test Save
-                    </button>
-                    <button type="button" onclick="viewDataStorage()" class="btn btn-secondary" style="max-width: 200px;">
-                        📦 View Storage
-                    </button>
+                <button type="submit" class="btn btn-primary btn-large">💾 Save Resume to Finder</button>
+                <div style="margin-top: 15px; padding: 15px; background: var(--bg-card); border-radius: 10px; border-left: 4px solid var(--success);">
+                    <p style="margin: 0; font-size: 13px; line-height: 1.6;">
+                        ✅ <strong>Files save automatically to Finder!</strong><br>
+                        📍 <strong>Location:</strong> Downloads folder<br>
+                        💡 <strong>To find:</strong> Open Finder → Press ⌘ + Shift + D<br>
+                        📝 <strong>Format:</strong> Plain text (.txt) - Opens in TextEdit!
+                    </p>
                 </div>
             </form>
         </div>
@@ -366,102 +361,6 @@
         </div>
     </div>
 
-    <!-- File Manager Screen -->
-    <div id="fileManagerScreen" class="screen">
-        <div class="header">
-            <button onclick="showScreen('dashboardScreen')" class="btn-back">← Back</button>
-            <h2>File Manager</h2>
-            <div></div>
-        </div>
-        
-        <div class="container">
-            <div class="file-manager-section">
-                <h3>💾 Save Resume to MacBook</h3>
-                <p class="subtitle">Save your resume as a file on your MacBook in the "saved_resumes" folder</p>
-                
-                <div class="file-actions">
-                    <button onclick="saveResumeToDownloads()" class="btn btn-primary btn-large">
-                        💾 Save Resume to MacBook NOW
-                    </button>
-                    <div style="margin-top: 15px; padding: 15px; background: var(--bg-card); border-radius: 10px; border-left: 4px solid var(--success);">
-                        <p style="margin: 0; font-size: 13px; line-height: 1.6;">
-                            ✅ <strong>AUTOMATIC SAVE TO MACBOOK!</strong><br>
-                            📝 Every time you click "Save Resume", it automatically saves to your MacBook!<br>
-                            📍 <strong>Location:</strong> <code>~/Downloads/RESUME_*.txt</code><br>
-                            💡 <strong>Format:</strong> Plain Text - Opens in TextEdit, Notes, ANY app!<br>
-                            🚫 <strong>NO BROWSER NEEDED</strong> - Just open the file from Finder!
-                        </p>
-                    </div>
-                </div>
-                
-                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border);">
-                    <h3>📂 Load Resume from File</h3>
-                    <p class="subtitle">Load a previously saved resume file</p>
-                    
-                    <div class="file-actions">
-                        <button onclick="loadResumeFromFile()" class="btn btn-primary btn-large">
-                            📂 Load Resume from File
-                        </button>
-                    </div>
-                </div>
-                
-                <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border);">
-                    <h3>📋 Find Your Saved Files</h3>
-                    <p class="subtitle">Your resumes are saved to:</p>
-                    <div class="file-location">
-                        <code id="fileLocation">~/Downloads/</code>
-                        <button onclick="copyFileLocation()" class="btn btn-secondary" style="padding: 5px 15px;">
-                            📋 Copy Path
-                        </button>
-                    </div>
-                    
-                    <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">
-                        <button onclick="findMyFilesNow()" class="btn btn-primary" style="flex: 1; min-width: 200px; background: var(--accent-primary); font-weight: bold;">
-                            🔍 FIND MY FILES NOW!
-                        </button>
-                        <button onclick="showSavedFilesLocation()" class="btn btn-secondary" style="flex: 1; min-width: 200px;">
-                            📂 Show File Location
-                        </button>
-                        <button onclick="openDownloadsFolder()" class="btn btn-secondary" style="flex: 1; min-width: 200px;">
-                            🗂️ How to Open Downloads
-                        </button>
-                        <button onclick="listAllSavedFiles()" class="btn btn-secondary" style="flex: 1; min-width: 200px;">
-                            📋 List All Saved Files
-                        </button>
-                    </div>
-                    
-                    <div style="margin-top: 20px; padding: 15px; background: var(--bg-card); border-radius: 10px; border-left: 4px solid var(--accent-primary);">
-                        <h4 style="margin-bottom: 10px; color: var(--accent-primary);">💡 Quick Guide to Find Files:</h4>
-                        <ol style="margin-left: 20px; line-height: 1.8; font-size: 13px;">
-                            <li><strong>Press ⌘ + Shift + D</strong> in Finder (opens Downloads)</li>
-                            <li>Or open Finder → Click <strong>"Downloads"</strong> in sidebar</li>
-                            <li>Or press <strong>⌘ + Shift + G</strong> → Type: <code>~/Downloads</code></li>
-                            <li>Look for files named: <code>resume_name_2024-11-30.json</code></li>
-                        </ol>
-                        <button onclick="helpFindFiles()" class="btn btn-primary" style="margin-top: 15px; width: 100%;">
-                            🆘 I Can't Find My Files - Help Me!
-                        </button>
-                        <button onclick="testFileDownload()" class="btn btn-secondary" style="margin-top: 10px; width: 100%;">
-                            🧪 Test File Download (Let's See Where It Goes!)
-                        </button>
-                        <button onclick="findMyFilesNow()" class="btn btn-primary" style="margin-top: 10px; width: 100%; background: var(--accent-primary);">
-                            🔍 FIND MY FILES NOW - Step by Step Guide!
-                        </button>
-                    </div>
-                    
-                    <div style="margin-top: 15px; padding: 15px; background: var(--bg-card); border-radius: 10px;">
-                        <h4 style="margin-bottom: 10px;">📁 Organize Your Files:</h4>
-                        <p style="font-size: 13px; line-height: 1.6;">
-                            Create a <strong>"saved_resumes"</strong> folder in Downloads to keep all your resumes organized:<br>
-                            <code style="display: block; margin-top: 8px; padding: 8px; background: var(--bg-secondary); border-radius: 5px;">
-                                ~/Downloads/saved_resumes/
-                            </code>
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Hidden file input for loading files -->
     <input type="file" id="fileInput" accept=".txt,.json" style="display: none;" onchange="handleFileLoad(event)">

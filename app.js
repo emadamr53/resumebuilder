@@ -1879,6 +1879,99 @@ function listAllSavedFiles() {
     });
 }
 
+// Find my files - step by step guide
+function findMyFilesNow() {
+    const lastFile = JSON.parse(localStorage.getItem('resumebuilder_last_saved_file') || '{}');
+    const allFiles = JSON.parse(localStorage.getItem('resumebuilder_saved_files_list') || '[]');
+    
+    let message = '🔍 LET\'S FIND YOUR FILES TOGETHER - STEP BY STEP!\n\n';
+    message += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
+    
+    if (allFiles.length === 0 && !lastFile.fileName) {
+        message += '❌ NO FILES SAVED YET!\n\n';
+        message += 'To save a file:\n';
+        message += '1. Create or edit your resume\n';
+        message += '2. Click "💾 Save Resume"\n';
+        message += '3. File will download automatically\n';
+        message += '4. Then come back here to find it!\n\n';
+        alert(message);
+        return;
+    }
+    
+    message += '✅ I FOUND YOUR SAVED FILES!\n\n';
+    
+    if (lastFile.fileName) {
+        message += `📄 LAST FILE SAVED:\n${lastFile.fileName}\n\n`;
+    }
+    
+    if (allFiles.length > 0) {
+        message += `📋 TOTAL FILES: ${allFiles.length}\n\n`;
+    }
+    
+    message += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
+    message += '📍 WHERE TO LOOK (3 EASY STEPS):\n\n';
+    message += 'STEP 1: Open Finder\n';
+    message += '   → Click the blue face icon in your Dock\n';
+    message += '   → (It\'s usually at the bottom of your screen)\n\n';
+    message += 'STEP 2: Open Downloads Folder\n';
+    message += '   → Press these 3 keys TOGETHER:\n';
+    message += '   → ⌘ (Command) + Shift + D\n';
+    message += '   → Downloads folder will open!\n\n';
+    message += 'STEP 3: Look for Your Files\n';
+    message += '   → Look for files starting with: RESUME_\n';
+    message += '   → Or files ending with: .txt\n';
+    message += '   → Sort by "Date Modified" (newest first)\n\n';
+    
+    if (lastFile.fileName) {
+        message += `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n`;
+        message += `🔍 LOOK FOR THIS EXACT FILE:\n\n`;
+        message += `${lastFile.fileName}\n\n`;
+    }
+    
+    message += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
+    message += '💡 STILL CAN\'T FIND IT? TRY THIS:\n\n';
+    message += 'Method 1: Search Your Mac\n';
+    message += '   1. Press ⌘ + Space (Spotlight search)\n';
+    message += '   2. Type: RESUME\n';
+    message += '   3. Press Enter\n';
+    message += '   4. All your resume files will show!\n\n';
+    message += 'Method 2: Check Browser Downloads\n';
+    message += '   Chrome: Press ⌘ + Shift + J\n';
+    message += '   Safari: Press ⌘ + Option + L\n';
+    message += '   Click on any file to show in Finder\n\n';
+    message += 'Method 3: Check Desktop\n';
+    message += '   Sometimes files save to Desktop instead\n';
+    message += '   Look on your Desktop for .txt files\n\n';
+    message += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
+    message += '📂 EXACT PATH ON YOUR MACBOOK:\n\n';
+    message += '/Users/amremad/Downloads/\n\n';
+    message += 'Or in Finder:\n';
+    message += '1. Press ⌘ + Shift + G\n';
+    message += '2. Type: ~/Downloads\n';
+    message += '3. Press Enter\n';
+    message += '4. Your files are there!\n\n';
+    message += '━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n';
+    message += '😊 Don\'t worry - your files ARE there!\n';
+    message += 'We just need to find them together! 💪';
+    
+    alert(message);
+    
+    // Also log to console
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🔍 FINDING YOUR FILES...');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('Last saved file:', lastFile);
+    console.log('All saved files:', allFiles.length);
+    console.log('\n📍 EXACT LOCATION:');
+    console.log('~/Downloads/');
+    console.log('/Users/amremad/Downloads/');
+    console.log('\n🔍 TO OPEN:');
+    console.log('1. Open Finder');
+    console.log('2. Press ⌘ + Shift + D');
+    console.log('3. Or press ⌘ + Shift + G and type: ~/Downloads');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+}
+
 // Test file download to see where it goes
 function testFileDownload() {
     alert('🧪 FILE DOWNLOAD TEST\n\n' +

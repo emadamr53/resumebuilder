@@ -1461,46 +1461,39 @@ function saveResumeToMacBookAutomatically(resume) {
     if (!resume || !currentUser) return;
     
     try {
-        // Prepare resume data
-        const resumeData = {
-            ...resume,
-            exportedAt: new Date().toISOString(),
-            exportedBy: currentUser.name || currentUser.username,
-            version: '1.0',
-            note: 'Automatically saved to your MacBook'
-        };
-        
-        const jsonContent = JSON.stringify(resumeData, null, 2);
-        
         // Create safe filename
         const safeName = (resume.name || 'Resume').replace(/[^a-z0-9]/gi, '_').toLowerCase();
         const dateStr = new Date().toISOString().split('T')[0];
         const timeStr = new Date().toTimeString().split(' ')[0].replace(/:/g, '-');
-        const fileName = `RESUME_${safeName}_${dateStr}_${timeStr}.json`;
         
-        // Download file to MacBook
-        const blob = new Blob([jsonContent], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = fileName;
-        link.style.display = 'none';
-        document.body.appendChild(link);
-        link.click();
+        // Save as READABLE TEXT FILE (opens in any text editor!)
+        const textFileName = `RESUME_${safeName}_${dateStr}_${timeStr}.txt`;
+        const textContent = formatResumeAsText(resume);
+        
+        // Download text file to MacBook
+        const textBlob = new Blob([textContent], { type: 'text/plain' });
+        const textUrl = URL.createObjectURL(textBlob);
+        const textLink = document.createElement('a');
+        textLink.href = textUrl;
+        textLink.download = textFileName;
+        textLink.style.display = 'none';
+        document.body.appendChild(textLink);
+        textLink.click();
         
         setTimeout(() => {
-            document.body.removeChild(link);
-            URL.revokeObjectURL(url);
+            document.body.removeChild(textLink);
+            URL.revokeObjectURL(textUrl);
         }, 100);
         
         // Store file info
         const fileInfo = {
-            fileName: fileName,
-            filePath: '~/Downloads/' + fileName,
-            fullPath: '/Users/amremad/Downloads/' + fileName,
+            fileName: textFileName,
+            filePath: '~/Downloads/' + textFileName,
+            fullPath: '/Users/amremad/Downloads/' + textFileName,
             savedAt: new Date().toISOString(),
-            fileSize: jsonContent.length,
-            autoSaved: true
+            fileSize: textContent.length,
+            autoSaved: true,
+            format: 'TXT (Readable Text)'
         };
         localStorage.setItem('resumebuilder_last_saved_file', JSON.stringify(fileInfo));
         
@@ -1509,12 +1502,78 @@ function saveResumeToMacBookAutomatically(resume) {
         savedFiles.push(fileInfo);
         localStorage.setItem('resumebuilder_saved_files_list', JSON.stringify(savedFiles));
         
-        console.log('✅ Automatically saved to MacBook:', fileName);
-        console.log('📍 Location: ~/Downloads/' + fileName);
+        console.log('✅ Automatically saved to MacBook:', textFileName);
+        console.log('📍 Location: ~/Downloads/' + textFileName);
+        console.log('📝 Format: Plain Text (opens in any text editor!)');
         
     } catch (error) {
         console.error('Error auto-saving to MacBook:', error);
     }
+}
+
+// Format resume as readable text
+function formatResumeAsText(resume) {
+    let text = '';
+    text += '═══════════════════════════════════════════════════════════════\n';
+    text += '                    RESUME / CURRICULUM VITAE\n';
+    text += '═══════════════════════════════════════════════════════════════\n\n';
+    
+    // Personal Information
+    text += 'PERSONAL INFORMATION\n';
+    text += '───────────────────────────────────────────────────────────────\n';
+    if (resume.name) text += `Name:           ${resume.name}\n`;
+    if (resume.email) text += `Email:          ${resume.email}\n`;
+    if (resume.phone) text += `Phone:          ${resume.phone}\n`;
+    if (resume.address) text += `Address:        ${resume.address}\n`;
+    text += '\n';
+    
+    // Skills
+    if (resume.skills && resume.skills.length > 0) {
+        text += 'SKILLS\n';
+        text += '───────────────────────────────────────────────────────────────\n';
+        text += resume.skills.join(', ') + '\n';
+        text += '\n';
+    }
+    
+    // Experience
+    if (resume.experiences && resume.experiences.length > 0) {
+        text += 'EXPERIENCE\n';
+        text += '───────────────────────────────────────────────────────────────\n';
+        resume.experiences.forEach((exp, index) => {
+            if (index > 0) text += '\n';
+            if (exp.jobTitle) text += `Position:       ${exp.jobTitle}\n`;
+            if (exp.company) text += `Company:        ${exp.company}\n`;
+            if (exp.location) text += `Location:       ${exp.location}\n`;
+            if (exp.startDate || exp.endDate) {
+                text += `Duration:       ${exp.startDate || ''} - ${exp.endDate || ''}\n`;
+            }
+            if (exp.description) {
+                text += `Description:\n${exp.description}\n`;
+            }
+        });
+        text += '\n';
+    }
+    
+    // Education
+    if (resume.education && resume.education.length > 0) {
+        text += 'EDUCATION\n';
+        text += '───────────────────────────────────────────────────────────────\n';
+        resume.education.forEach((edu, index) => {
+            if (index > 0) text += '\n';
+            if (edu.degree) text += `Degree:         ${edu.degree}\n`;
+            if (edu.field) text += `Field:          ${edu.field}\n`;
+            if (edu.institution) text += `Institution:    ${edu.institution}\n`;
+            if (edu.year) text += `Year:           ${edu.year}\n`;
+            if (edu.gpa) text += `GPA:            ${edu.gpa}\n`;
+        });
+        text += '\n';
+    }
+    
+    text += '═══════════════════════════════════════════════════════════════\n';
+    text += `Generated: ${new Date().toLocaleString()}\n`;
+    text += '═══════════════════════════════════════════════════════════════\n';
+    
+    return text;
 }
 
 // Save resume to Downloads folder on MacBook
@@ -1601,28 +1660,32 @@ function saveResumeToDownloads() {
 
 // Show file saved success message
 function showFileSavedSuccess(fileName, fileInfo) {
-    const message = `✅✅✅ FILE SAVED TO YOUR MACBOOK! ✅✅✅\n\n` +
-        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-        `📄 FILE NAME:\n${fileName}\n\n` +
-        `📍 EXACT LOCATION ON YOUR MACBOOK:\n` +
-        `/Users/amremad/Downloads/${fileName}\n\n` +
-        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-        `🔍 HOW TO FIND IT RIGHT NOW (3 EASY STEPS):\n\n` +
-        `STEP 1: Open Finder (click blue face icon in Dock)\n\n` +
-        `STEP 2: Press these 3 keys together:\n` +
-        `       ⌘ (Command) + Shift + D\n\n` +
-        `STEP 3: Downloads folder opens - YOUR FILE IS THERE!\n` +
-        `       Look for: ${fileName}\n\n` +
-        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-        `💡 OTHER WAYS TO FIND IT:\n\n` +
-        `• Click "Downloads" in Finder sidebar\n` +
-        `• Press ⌘ + Space, type: ${fileName}\n` +
-        `• Check browser Downloads (⌘ + Shift + J in Chrome)\n\n` +
-        `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-        `✅ YOUR FILE IS ON YOUR MACBOOK - NOT ON GITHUB!\n` +
-        `✅ It's in your Downloads folder right now!\n` +
-        `✅ You can open it, move it, or share it!\n\n` +
-        `🕐 Saved at: ${new Date(fileInfo.savedAt).toLocaleString()}`;
+        const message = `✅✅✅ FILE SAVED TO YOUR MACBOOK! ✅✅✅\n\n` +
+            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+            `📄 FILE NAME:\n${fileName}\n\n` +
+            `📝 FILE FORMAT: Plain Text (.txt)\n` +
+            `✅ Opens in ANY app - TextEdit, Notes, even Notepad!\n` +
+            `✅ No special application needed!\n\n` +
+            `📍 EXACT LOCATION ON YOUR MACBOOK:\n` +
+            `/Users/amremad/Downloads/${fileName}\n\n` +
+            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+            `🔍 HOW TO FIND IT RIGHT NOW (3 EASY STEPS):\n\n` +
+            `STEP 1: Open Finder (click blue face icon in Dock)\n\n` +
+            `STEP 2: Press these 3 keys together:\n` +
+            `       ⌘ (Command) + Shift + D\n\n` +
+            `STEP 3: Downloads folder opens - YOUR FILE IS THERE!\n` +
+            `       Look for: ${fileName}\n\n` +
+            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+            `💡 TO OPEN THE FILE:\n\n` +
+            `• Double-click the file - opens in TextEdit!\n` +
+            `• Or right-click → Open With → Choose any app\n` +
+            `• Or drag to Notes app\n` +
+            `• Works with ANY text editor!\n\n` +
+            `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+            `✅ YOUR FILE IS ON YOUR MACBOOK - NOT ON GITHUB!\n` +
+            `✅ It's a plain text file - opens anywhere!\n` +
+            `✅ You can read it, edit it, or share it!\n\n` +
+            `🕐 Saved at: ${new Date(fileInfo.savedAt).toLocaleString()}`;
     
     alert(message);
     
@@ -1766,18 +1829,31 @@ function testFileDownload() {
         'Watch the bottom of your browser - you\'ll see the download!\n\n' +
         'Then we\'ll find it together!');
     
-    // Create a simple test file
-    const testContent = {
-        message: 'This is a test file to find your Downloads folder!',
-        created: new Date().toISOString(),
-        instructions: 'If you can see this file, your Downloads folder is working!'
-    };
+    // Create a simple test file as PLAIN TEXT (opens in any app!)
+    const testContent = `═══════════════════════════════════════════════════════════════
+                    TEST FILE - FIND YOUR DOWNLOADS FOLDER
+═══════════════════════════════════════════════════════════════
+
+This is a test file to find your Downloads folder!
+
+If you can see this file, your Downloads folder is working perfectly!
+
+Created: ${new Date().toLocaleString()}
+
+Instructions:
+1. This file is saved as PLAIN TEXT (.txt)
+2. It opens in ANY app - TextEdit, Notes, even Notepad!
+3. No special application needed!
+4. Your resume files are saved the same way!
+
+Location: ~/Downloads/
+
+═══════════════════════════════════════════════════════════════`;
     
-    const jsonContent = JSON.stringify(testContent, null, 2);
-    const fileName = `TEST_FIND_MY_FILES_${new Date().getTime()}.json`;
+    const fileName = `TEST_FIND_MY_FILES_${new Date().getTime()}.txt`;
     
-    // Download the test file
-    const blob = new Blob([jsonContent], { type: 'application/json' });
+    // Download the test file as plain text
+    const blob = new Blob([testContent], { type: 'text/plain' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -1794,7 +1870,9 @@ function testFileDownload() {
         setTimeout(() => {
             const instructions = `✅ TEST FILE DOWNLOADED!\n\n` +
                 `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-                `📄 File Name: ${fileName}\n\n` +
+                `📄 File Name: ${fileName}\n` +
+                `📝 Format: Plain Text (.txt)\n` +
+                `✅ Opens in ANY app - TextEdit, Notes, etc!\n\n` +
                 `🔍 DID YOU SEE IT DOWNLOAD?\n` +
                 `Look at the bottom of your browser - did you see a download?\n\n` +
                 `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
@@ -1805,13 +1883,15 @@ function testFileDownload() {
                 `- Click on it to open the folder!\n\n` +
                 `STEP 2: If you don't see it, open Finder:\n` +
                 `- Press ⌘ + Shift + D\n` +
-                `- Look for: ${fileName}\n\n` +
+                `- Look for: ${fileName}\n` +
+                `- Double-click to open in TextEdit!\n\n` +
                 `STEP 3: Check browser Downloads:\n` +
                 `- Chrome: Press ⌘ + Shift + J\n` +
                 `- Safari: Press ⌘ + Option + L\n` +
                 `- Click on the file to show in Finder\n\n` +
                 `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
-                `💡 Once you find this test file, your resume files are in the SAME place!`;
+                `💡 Once you find this test file, your resume files are in the SAME place!\n` +
+                `💡 All files are saved as .txt - open in ANY text editor!`;
             
             alert(instructions);
         }, 500);
@@ -1825,8 +1905,10 @@ function loadResumeFromFile() {
         return;
     }
     
-    // Trigger file input
-    document.getElementById('fileInput').click();
+    // Trigger file input - accept both .txt and .json
+    const fileInput = document.getElementById('fileInput');
+    fileInput.accept = '.txt,.json';
+    fileInput.click();
 }
 
 // Handle file load
@@ -1838,7 +1920,22 @@ function handleFileLoad(event) {
     
     reader.onload = function(e) {
         try {
-            const resumeData = JSON.parse(e.target.result);
+            const fileContent = e.target.result;
+            let resumeData;
+            
+            // Try to parse as JSON first (for old .json files)
+            if (file.name.endsWith('.json')) {
+                resumeData = JSON.parse(fileContent);
+            } else {
+                // For .txt files, we can't easily parse back, so show message
+                alert('📝 Text files (.txt) are for reading only.\n\n' +
+                    'To load a resume, please:\n' +
+                    '1. Use the web app to create/edit your resume\n' +
+                    '2. Or load from a .json file (if you have one)\n\n' +
+                    'The .txt files are saved for easy reading and sharing!');
+                event.target.value = '';
+                return;
+            }
             
             // Validate resume data
             if (!resumeData.name && !resumeData.email) {
@@ -1886,7 +1983,7 @@ function handleFileLoad(event) {
             
         } catch (error) {
             console.error('Error loading file:', error);
-            alert('❌ Error loading file:\n\n' + error.message + '\n\nPlease make sure you selected a valid resume JSON file.');
+            alert('❌ Error loading file:\n\n' + error.message + '\n\nNote: .txt files are for reading only. To load a resume, use a .json file or create a new one in the app.');
         }
     };
     

@@ -386,7 +386,9 @@
                     <div style="margin-top: 15px; padding: 15px; background: var(--bg-card); border-radius: 10px; border-left: 4px solid var(--success);">
                         <p style="margin: 0; font-size: 13px; line-height: 1.6;">
                             ✅ <strong>GOOD NEWS!</strong> Your resume is automatically saved to your MacBook every time you click "Save Resume"!<br>
-                            📍 Files are saved to: <code>~/Downloads/RESUME_*.json</code>
+                            📝 <strong>Format:</strong> Plain Text (.txt) - Opens in ANY app!<br>
+                            📍 <strong>Location:</strong> <code>~/Downloads/RESUME_*.txt</code><br>
+                            💡 <strong>Opens in:</strong> TextEdit, Notes, or any text editor - NO special app needed!
                         </p>
                     </div>
                 </div>
@@ -455,7 +457,7 @@
     </div>
 
     <!-- Hidden file input for loading files -->
-    <input type="file" id="fileInput" accept=".json,.txt" style="display: none;" onchange="handleFileLoad(event)">
+    <input type="file" id="fileInput" accept=".txt,.json" style="display: none;" onchange="handleFileLoad(event)">
 
     <script src="app.js"></script>
 </body>

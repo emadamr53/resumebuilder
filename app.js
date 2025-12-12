@@ -1474,6 +1474,14 @@ function saveResumeToDownloads() {
         link.download = fileName; // This triggers download to MacBook
         link.style.display = 'none';
         document.body.appendChild(link);
+        
+        // Show download notification
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        console.log('📥 DOWNLOADING FILE NOW...');
+        console.log('📄 File:', fileName);
+        console.log('📍 Watch the bottom of your browser!');
+        console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        
         link.click();
         
         // Wait a moment then remove
@@ -1667,6 +1675,65 @@ function listAllSavedFiles() {
     allFiles.forEach((file, index) => {
         console.log(`${index + 1}. ${file.fileName} - ${file.filePath}`);
     });
+}
+
+// Test file download to see where it goes
+function testFileDownload() {
+    alert('🧪 FILE DOWNLOAD TEST\n\n' +
+        'I\'m going to create a test file so we can see EXACTLY where it downloads!\n\n' +
+        'Watch the bottom of your browser - you\'ll see the download!\n\n' +
+        'Then we\'ll find it together!');
+    
+    // Create a simple test file
+    const testContent = {
+        message: 'This is a test file to find your Downloads folder!',
+        created: new Date().toISOString(),
+        instructions: 'If you can see this file, your Downloads folder is working!'
+    };
+    
+    const jsonContent = JSON.stringify(testContent, null, 2);
+    const fileName = `TEST_FIND_MY_FILES_${new Date().getTime()}.json`;
+    
+    // Download the test file
+    const blob = new Blob([jsonContent], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    
+    setTimeout(() => {
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+        
+        // Show instructions
+        setTimeout(() => {
+            const instructions = `✅ TEST FILE DOWNLOADED!\n\n` +
+                `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+                `📄 File Name: ${fileName}\n\n` +
+                `🔍 DID YOU SEE IT DOWNLOAD?\n` +
+                `Look at the bottom of your browser - did you see a download?\n\n` +
+                `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+                `📍 NOW LET'S FIND IT:\n\n` +
+                `STEP 1: Check browser Downloads bar\n` +
+                `- Look at the bottom of your browser\n` +
+                `- You should see the file downloading\n` +
+                `- Click on it to open the folder!\n\n` +
+                `STEP 2: If you don't see it, open Finder:\n` +
+                `- Press ⌘ + Shift + D\n` +
+                `- Look for: ${fileName}\n\n` +
+                `STEP 3: Check browser Downloads:\n` +
+                `- Chrome: Press ⌘ + Shift + J\n` +
+                `- Safari: Press ⌘ + Option + L\n` +
+                `- Click on the file to show in Finder\n\n` +
+                `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n` +
+                `💡 Once you find this test file, your resume files are in the SAME place!`;
+            
+            alert(instructions);
+        }, 500);
+    }, 100);
 }
 
 // Load resume from file

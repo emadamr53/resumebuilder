@@ -28,16 +28,42 @@
             <form id="loginForm" class="form">
                 <div class="input-group">
                     <label>Email Address</label>
-                    <input type="email" id="loginEmail" placeholder="Enter your email" required>
+                    <input type="email" id="loginEmail" placeholder="Enter your email" required autocomplete="email">
                 </div>
                 <div class="input-group">
                     <label>Password</label>
-                    <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                    <input type="password" id="loginPassword" placeholder="Enter your password" required autocomplete="current-password">
                 </div>
                 <button type="submit" class="btn btn-primary">Sign In</button>
             </form>
             
+            <p class="link-text">
+                <a href="#" id="showForgotPassword" style="color: #667eea; text-decoration: none; font-size: 14px;">Forgot Password?</a>
+            </p>
             <p class="link-text">Don't have an account? <a href="#" id="showSignup">Sign Up</a></p>
+        </div>
+    </div>
+
+    <!-- Forgot Password Screen -->
+    <div id="forgotPasswordScreen" class="screen">
+        <div class="container">
+            <div class="logo">
+                <div class="logo-circle">🔒</div>
+            </div>
+            <h1>Reset Password</h1>
+            <p class="subtitle">Enter your email to reset your password</p>
+            
+            <form id="forgotPasswordForm" class="form">
+                <div class="input-group">
+                    <label>Email Address</label>
+                    <input type="email" id="forgotPasswordEmail" placeholder="Enter your email" required autocomplete="email">
+                </div>
+                <button type="submit" class="btn btn-primary">Reset Password</button>
+            </form>
+            
+            <p class="link-text">
+                <a href="#" id="backToLogin">← Back to Login</a>
+            </p>
         </div>
     </div>
 

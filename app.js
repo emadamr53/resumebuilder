@@ -114,6 +114,28 @@ function setupEventListeners() {
             });
         }
         
+        // Forgot Password
+        const showForgotPasswordLink = document.getElementById('showForgotPassword');
+        if (showForgotPasswordLink) {
+            showForgotPasswordLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                showScreen('forgotPasswordScreen');
+            });
+        }
+        
+        const backToLoginLink = document.getElementById('backToLogin');
+        if (backToLoginLink) {
+            backToLoginLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                showScreen('loginScreen');
+            });
+        }
+        
+        const forgotPasswordForm = document.getElementById('forgotPasswordForm');
+        if (forgotPasswordForm) {
+            forgotPasswordForm.addEventListener('submit', handleForgotPassword);
+        }
+        
         // Logout
         const logoutBtn = document.getElementById('logoutBtn');
         if (logoutBtn) {
@@ -259,6 +281,174 @@ function handleSignup(e) {
     }
 }
 
+// Handle forgot password
+function handleForgotPassword(e) {
+    e.preventDefault();
+    
+    try {
+        const email = document.getElementById('forgotPasswordEmail').value.trim().toLowerCase();
+        
+        if (!email) {
+            alert('Please enter your email address!');
+            return;
+        }
+        
+        const users = getUsers();
+        const user = users.find(u => u.email && u.email.toLowerCase() === email.toLowerCase());
+        
+        if (user) {
+            // Generate a simple reset code (in real app, you'd send email)
+            const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+            
+            // Store reset code temporarily (in real app, this would be sent via email)
+            const resetData = {
+                email: email,
+                code: resetCode,
+                expires: Date.now() + 3600000 // 1 hour
+            };
+            localStorage.setItem('resumebuilder_reset_' + email, JSON.stringify(resetData));
+            
+            // Show reset code (in production, this would be sent via email)
+            alert('✅ Password reset code sent!\n\nReset Code: ' + resetCode + '\n\n(Note: In production, this would be sent to your email)\n\nPlease enter this code to reset your password.');
+            
+            // Show reset password form
+            showResetPasswordForm(email, resetCode);
+        } else {
+            alert('❌ Email not found! Please check your email address or sign up for a new account.');
+        }
+    } catch (error) {
+        console.error('Forgot password error:', error);
+        alert('An error occurred. Please try again.\nError: ' + error.message);
+    }
+}
+
+// Show reset password form
+function showResetPasswordForm(email, resetCode) {
+    const forgotPasswordScreen = document.getElementById('forgotPasswordScreen');
+    if (!forgotPasswordScreen) return;
+    
+    forgotPasswordScreen.innerHTML = `
+        <div class="container">
+            <div class="logo">
+                <div class="logo-circle">🔐</div>
+            </div>
+            <h1>Reset Password</h1>
+            <p class="subtitle">Enter reset code and new password</p>
+            
+            <form id="resetPasswordForm" class="form">
+                <div class="input-group">
+                    <label>Reset Code</label>
+                    <input type="text" id="resetCode" placeholder="Enter 6-digit code" required maxlength="6" pattern="[0-9]{6}">
+                </div>
+                <div class="input-group">
+                    <label>New Password</label>
+                    <input type="password" id="newPassword" placeholder="Enter new password (min 6 characters)" required minlength="6" autocomplete="new-password">
+                </div>
+                <div class="input-group">
+                    <label>Confirm Password</label>
+                    <input type="password" id="confirmPassword" placeholder="Confirm new password" required minlength="6" autocomplete="new-password">
+                </div>
+                <button type="submit" class="btn btn-primary">Reset Password</button>
+            </form>
+            
+            <p class="link-text">
+                <a href="#" id="backToLoginFromReset">← Back to Login</a>
+            </p>
+        </div>
+    `;
+    
+    // Add event listeners
+    const resetPasswordForm = document.getElementById('resetPasswordForm');
+    if (resetPasswordForm) {
+        resetPasswordForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            handleResetPassword(email);
+        });
+    }
+    
+    const backToLoginFromReset = document.getElementById('backToLoginFromReset');
+    if (backToLoginFromReset) {
+        backToLoginFromReset.addEventListener('click', (e) => {
+            e.preventDefault();
+            location.reload(); // Reload to reset the form
+        });
+    }
+}
+
+// Handle reset password
+function handleResetPassword(email) {
+    try {
+        const resetCode = document.getElementById('resetCode').value.trim();
+        const newPassword = document.getElementById('newPassword').value;
+        const confirmPassword = document.getElementById('confirmPassword').value;
+        
+        if (!resetCode || !newPassword || !confirmPassword) {
+            alert('Please fill in all fields!');
+            return;
+        }
+        
+        if (resetCode.length !== 6 || !/^\d+$/.test(resetCode)) {
+            alert('Reset code must be 6 digits!');
+            return;
+        }
+        
+        if (newPassword.length < 6) {
+            alert('Password must be at least 6 characters long!');
+            return;
+        }
+        
+        if (newPassword !== confirmPassword) {
+            alert('Passwords do not match!');
+            return;
+        }
+        
+        // Verify reset code
+        const resetDataStr = localStorage.getItem('resumebuilder_reset_' + email.toLowerCase());
+        if (!resetDataStr) {
+            alert('❌ Invalid or expired reset code!');
+            return;
+        }
+        
+        const resetData = JSON.parse(resetDataStr);
+        if (resetData.code !== resetCode) {
+            alert('❌ Invalid reset code! Please check and try again.');
+            return;
+        }
+        
+        if (Date.now() > resetData.expires) {
+            alert('❌ Reset code has expired! Please request a new one.');
+            localStorage.removeItem('resumebuilder_reset_' + email.toLowerCase());
+            return;
+        }
+        
+        // Update password
+        const users = getUsers();
+        const userIndex = users.findIndex(u => u.email && u.email.toLowerCase() === email.toLowerCase());
+        
+        if (userIndex >= 0) {
+            users[userIndex].password = newPassword;
+            localStorage.setItem(STORAGE_KEY_USERS, JSON.stringify(users));
+            
+            // Remove reset data
+            localStorage.removeItem('resumebuilder_reset_' + email.toLowerCase());
+            
+            alert('✅ Password reset successfully! You can now login with your new password.');
+            showScreen('loginScreen');
+            
+            // Clear login form
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                loginForm.reset();
+            }
+        } else {
+            alert('❌ User not found!');
+        }
+    } catch (error) {
+        console.error('Reset password error:', error);
+        alert('An error occurred. Please try again.\nError: ' + error.message);
+    }
+}
+
 // Handle logout
 function handleLogout() {
     currentUser = null;
@@ -269,7 +459,10 @@ function handleLogout() {
 // Update welcome text
 function updateWelcomeText() {
     if (currentUser) {
-        document.getElementById('welcomeText').textContent = `Welcome back, ${currentUser.name || currentUser.username}!`;
+        const welcomeTextEl = document.getElementById('welcomeText');
+        if (welcomeTextEl) {
+            welcomeTextEl.textContent = `Welcome back, ${currentUser.name || currentUser.username}!`;
+        }
     }
 }
 
